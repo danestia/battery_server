@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary #if postgres
+pydantic
+python-dotenv
+streamlit
