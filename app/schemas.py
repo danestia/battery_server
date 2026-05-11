@@ -7,6 +7,6 @@ class BatteryLogIn(BaseModel):
     timestamp: datetime
     level: int
     plugged: bool
-    localisation: Optional[str] = None
+    localisation: str
     event_type: Optional[str] = None
     event_chargelevel: Optional[int] = None

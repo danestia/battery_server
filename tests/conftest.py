@@ -1,32 +1,25 @@
 import os
-if os.path.exists("test.db"):
-    os.remove("test.db")
-
-os.environ["DATABASE_URL"] = "sqlite:///./test.db"
-
-import os
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+# Use a named in-memory database shared across connections
+os.environ["DATABASE_URL"] = "sqlite:///file:testdb?mode=memory&cache=shared&uri=true"
 
-from app.db.base import Base, get_engine
-from app.db.session import SessionLocal
+from app.db.base import Base
+from app.db.engine import get_engine
 from app.main import app
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_db():
-    # Recreate global engine for tests
+@pytest.fixture(scope="session")
+def engine():
     engine = get_engine()
     Base.metadata.create_all(bind=engine)
-    yield
+    yield engine
     Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
-def db_session():
-    engine = get_engine()
+def db_session(engine):
     TestingSessionLocal = sessionmaker(
         autocommit=False,
         autoflush=False,
@@ -36,10 +29,12 @@ def db_session():
     try:
         yield session
     finally:
+        session.rollback()
         session.close()
 
 @pytest.fixture(scope="function")
 def client(db_session):
+    from app.ingestion import get_db
 
     def override_get_db():
         try:
@@ -47,7 +42,6 @@ def client(db_session):
         finally:
             pass
 
+    app.dependency_overrides[get_db] = override_get_db
+    yield TestClient(app)
     app.dependency_overrides.clear()
-    app.dependency_overrides[app.ingestion.get_db] = override_get_db
-
-    return TestClient(app)
