@@ -10,7 +10,9 @@ class LogRepository:
             timestamp=log.timestamp,
             level=log.level,
             plugged=log.plugged,
-            event=log.event,
+            localisation=log.localisation,
+            event_type=log.event_type,
+            event_chargelevel=log.event_chargelevel
         )
         db.add(entry)
         db.commit()

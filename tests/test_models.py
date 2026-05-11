@@ -2,15 +2,15 @@ from app import models
 from datetime import datetime
 
 def test_device_model(db_session):
-    device = models.Device(device_id="abc123")
+    device = models.Device(device_id="model_test_device_1")
     db_session.add(device)
     db_session.commit()
 
     assert device.id is not None
-    assert device.device_id == "abc123"
+    assert device.device_id == "model_test_device_1"
 
 def test_batterylog_model(db_session):
-    device = models.Device(device_id="abc123")
+    device = models.Device(device_id="model_test_device_2")
     db_session.add(device)
     db_session.commit()
 
@@ -19,7 +19,9 @@ def test_batterylog_model(db_session):
         timestamp=datetime.utcnow(),
         level=55,
         plugged=False,
-        event="unit_test"
+        localisation="office",
+        event_type=None,
+        event_chargelevel=None,
     )
     db_session.add(log)
     db_session.commit()

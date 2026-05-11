@@ -7,7 +7,9 @@ def test_ingest_endpoint(client, db_session):
         "timestamp": datetime.utcnow().isoformat(),
         "level": 90,
         "plugged": True,
-        "event": "ingest_test"
+        "localisation": "office",
+        "event_type": "ingest_test",
+        "event_chargelevel": None,
     }
 
     response = client.post("/ingest", json=payload)
@@ -17,6 +19,6 @@ def test_ingest_endpoint(client, db_session):
     device = db_session.execute(text("SELECT * FROM devices")).fetchone()
     assert device is not None
     
-    log = db_session.execute(text("SELECT * FROM devices")).fetchone()
+    log = db_session.execute(text("SELECT * FROM battery_logs")).fetchone()
     assert log is not None
     assert log.level == 90
