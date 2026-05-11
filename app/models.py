@@ -1,25 +1,23 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
-from datetime import datetime
-from app.db.base import Base
+from sqlalchemy.sql import func
+from .base import Base
 
 class Device(Base):
     __tablename__ = "devices"
 
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(String, unique=True, index=True)
-    first_seen = Column(DateTime, default=datetime.utcnow)
-
-    logs = relationship("BatteryLog", back_populates="device")
+    last_seen = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 class BatteryLog(Base):
     __tablename__ = "battery_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    device_id = Column(Integer, ForeignKey("devices.id"))
-    timestamp = Column(DateTime, index=True)
-    level = Column(Integer)
-    plugged = Column(Boolean)
-    event = Column(String)
+    device_id = Column(Integer, ForeignKey("devices.id"), index=True)
+    timestamp = Column(DateTime, nullable=False)
+    level = Column(Integer, nullable=False)
+    plugged = Column(Boolean, nullable=False)
 
-    device = relationship("Device", back_populates="logs")
+    localisation = Column(String, nullable=True)
+    event_type = Column(String, nullable=True)
+    event_chargelevel = Column(Integer, nullable=True)

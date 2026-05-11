@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.db import SessionLocal
+from app.db.session import SessionLocal
 from app.db.repositories.devices import DeviceRepository
 from app.db.repositories.logs import LogRepository
 from app import schemas
@@ -18,6 +18,8 @@ def get_db():
 def ingest(log: schemas.BatteryLogIn, db: Session = Depends(get_db)):
     device = DeviceRepository.get_or_create(db, log.device_id)
     LogRepository.insert_log(db, device.id, log)
-    DeviceRepository.update_last_sen(db, device)
+    DeviceRepository.update_last_seen(db, device)
 
     return {"status": "ok"}
+
+
