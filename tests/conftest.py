@@ -1,6 +1,5 @@
 import os
 import pytest
-from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 
