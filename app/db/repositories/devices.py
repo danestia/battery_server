@@ -55,4 +55,12 @@ class DeviceRepository:
     def delete(db: Session, device):
         db.delete(device)
         db.commit()
+
+    @staticmethod
+    def get_all(db):
+        return db.query(models.Device).all()
+    
+    @staticmethod
+    def get_by_id(db, device_id: int):
+        return db.query(models.Device).filter(models.Device.id == device_id).first()
         

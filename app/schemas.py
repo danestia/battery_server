@@ -30,3 +30,17 @@ class DeviceOut(DeviceBase):
 
     class Config:
         orm_mode = True
+
+class LogOut(BaseModel):
+    id: int
+    device_id: int
+    timestamp: datetime
+    level: int
+    plugged: bool
+    localisation: Optional[str] = None
+    event_type: Optional[str] = None
+    event_chargelevel: Optional[int] = None
+
+    class Config:
+        orm_mode = True
+

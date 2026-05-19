@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from datetime import datetime, timezone
 from app.ingestion import router as ingestion_router
+from app.logs import router as logs_router
+from app.stats import router as stats_router
 
 app = FastAPI(
     title="Battery Tracker Hub",
@@ -9,6 +11,8 @@ app = FastAPI(
 )
 
 app.include_router(ingestion_router)
+app.include_router(logs_router)
+app.include_router(stats_router)
 
 @app.get("/health")
 def health():
@@ -16,3 +20,4 @@ def health():
         "status": "ok",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
