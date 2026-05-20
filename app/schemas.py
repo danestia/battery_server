@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -24,14 +24,13 @@ class DeviceUpdate(BaseModel):
     os: str | None = None
 
 class DeviceOut(DeviceBase):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     first_seen: datetime
     last_seen: datetime
 
-    class Config:
-        orm_mode = True
-
 class LogOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     device_id: int
     timestamp: datetime
@@ -40,7 +39,4 @@ class LogOut(BaseModel):
     localisation: Optional[str] = None
     event_type: Optional[str] = None
     event_chargelevel: Optional[int] = None
-
-    class Config:
-        orm_mode = True
 

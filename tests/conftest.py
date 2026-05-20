@@ -14,20 +14,21 @@ from app.main import app
 def engine():
     engine = get_engine()
     Base.metadata.create_all(bind=engine)
-    yield engine
-    Base.metadata.drop_all(bind=engine)
+    return engine
 
 @pytest.fixture(scope="function")
 def db_session(engine):
     TestingSessionLocal = sessionmaker(
         autocommit=False,
         autoflush=False,
-        bind=engine
+        bind=engine,
     )
     session = TestingSessionLocal()
+
     try:
         yield session
     finally:
+        session.expire_all()
         session.rollback()
         session.close()
 
@@ -42,5 +43,6 @@ def client(db_session):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    yield TestClient(app)
+    test_client = TestClient(app)
+    yield test_client
     app.dependency_overrides.clear()

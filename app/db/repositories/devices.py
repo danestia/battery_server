@@ -23,12 +23,12 @@ class DeviceRepository:
         db.commit()
 
     @staticmethod
-    def list_all(db: Session):
+    def get_all(db: Session):
         return db.query(models.Device).all()
     
     @staticmethod
-    def get_by_id(db: Session, id_: int):
-        return db.query(models.Device).filter(models.Device.id == id_).first()
+    def get_by_id(db: Session, device_id: int):
+        return db.query(models.Device).filter(models.Device.id == device_id).first()
     
     @staticmethod
     def create(db: Session, data: schemas.DeviceCreate):
@@ -56,11 +56,4 @@ class DeviceRepository:
         db.delete(device)
         db.commit()
 
-    @staticmethod
-    def get_all(db):
-        return db.query(models.Device).all()
     
-    @staticmethod
-    def get_by_id(db, device_id: int):
-        return db.query(models.Device).filter(models.Device.id == device_id).first()
-        
