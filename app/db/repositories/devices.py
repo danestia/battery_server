@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app import models
+from app import schemas
 from datetime import datetime
 
 class DeviceRepository:
@@ -20,3 +21,39 @@ class DeviceRepository:
     def update_last_seen(db: Session, device):
         device.last_seen = datetime.utcnow()
         db.commit()
+
+    @staticmethod
+    def get_all(db: Session):
+        return db.query(models.Device).all()
+    
+    @staticmethod
+    def get_by_id(db: Session, device_id: int):
+        return db.query(models.Device).filter(models.Device.id == device_id).first()
+    
+    @staticmethod
+    def create(db: Session, data: schemas.DeviceCreate):
+        device = models.Device(
+            device_id=data.device_id,
+            hostname=data.hostname,
+            os=data.os,
+        )
+        db.add(device)
+        db.commit()
+        db.refresh(device)
+        return device
+    
+    @staticmethod
+    def update(db: Session, device, data: schemas.DeviceUpdate):
+        for field, value in data.dict(exclude_unset=True).items():
+            setattr(device, field, value)
+        device.last_seen = datetime.utcnow()
+        db.commit()
+        db.refresh(device)
+        return device
+    
+    @staticmethod
+    def delete(db: Session, device):
+        db.delete(device)
+        db.commit()
+
+    

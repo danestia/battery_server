@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 def test_ingest_endpoint(client, db_session):
     payload = {
-        "device_id": "abc123",
+        "device_id": "ingest_test_device",
         "timestamp": datetime.utcnow().isoformat(),
         "level": 90,
         "plugged": True,
@@ -16,9 +16,14 @@ def test_ingest_endpoint(client, db_session):
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
-    device = db_session.execute(text("SELECT * FROM devices")).fetchone()
+    device = db_session.execute(
+        text("SELECT * FROM devices WHERE device_id = 'ingest_test_device'")
+    ).fetchone()    
     assert device is not None
     
-    log = db_session.execute(text("SELECT * FROM battery_logs")).fetchone()
+    log = db_session.execute(
+        text("SELECT * FROM battery_logs WHERE device_id = :did ORDER BY timestamp DESC LIMIT 1"),
+        {"did": device.id}
+    ).fetchone()    
     assert log is not None
     assert log.level == 90
