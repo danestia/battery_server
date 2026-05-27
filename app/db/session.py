@@ -3,9 +3,10 @@ from .engine import get_engine
 
 def get_session():
     engine = get_engine()
-    SessionLocal = sessionmaker(
+
+    return sessionmaker(
         autocommit=False,
         autoflush=False,
         bind=engine,
     )
-    return SessionLocal()
+   

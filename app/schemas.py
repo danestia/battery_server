@@ -40,3 +40,12 @@ class LogOut(BaseModel):
     event_type: Optional[str] = None
     event_chargelevel: Optional[int] = None
 
+class IngestRequest(BaseModel):
+    device_id: str
+    timestamp: datetime
+    level: int
+    plugged: bool
+    localisation: str | None = None
+    event_type: str | None = None
+    event_chargelevel: int | None = None
+
