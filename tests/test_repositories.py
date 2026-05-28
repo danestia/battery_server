@@ -22,8 +22,9 @@ def test_update_last_seen(db_session):
 
 def test_insert_log(db_session):
     device = DeviceRepository.get_or_create(db_session, "repo_device_3")
-    log = BatteryLogIn(
-        device_id="repo_device_3",
+    LogRepository.insert_log(
+        db=db_session,
+        device_id=device.id,
         timestamp=datetime.utcnow(),
         level=42,
         plugged=True,
@@ -31,7 +32,6 @@ def test_insert_log(db_session):
         event_type=None,
         event_chargelevel=None
     )
-    LogRepository.insert_log(db_session, device.id, log)
     logs = db_session.query(models.BatteryLog).filter_by(device_id=device.id).all()
     assert len(logs) == 1
     assert logs[0].level == 42

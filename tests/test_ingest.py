@@ -6,7 +6,7 @@ from app.models import BatteryLog
 
 client = TestClient(app)
 
-def test_ingest_creates_device_and_log():
+def test_ingest_creates_device_and_log(client, db_session):
     payload ={
         "device_id": "test-device-123",
         "timestamp": "2026-05-19T12:00:00Z",
@@ -17,15 +17,13 @@ def test_ingest_creates_device_and_log():
         "event_chargelevel": 87
     }
 
-    response = client.post("/ingest", json=payload)
+    response = client.post("/ingest/", json=payload)
     assert response.status_code == 200
 
-    db = get_session()
-
-    device = db.query(Device).filter_by(device_id="test-device-123").first()
+    device = db_session.query(Device).filter_by(device_id="test-device-123").first()
     assert device is not None
 
-    log = db.query(BatteryLog).filter_by(device_id=device.id).first()
+    log = db_session.query(BatteryLog).filter_by(device_id=device.id).first()
     assert log is not None
     assert log.level == 87
     assert log.plugged is False

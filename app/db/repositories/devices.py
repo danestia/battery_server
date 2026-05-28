@@ -27,9 +27,13 @@ class DeviceRepository:
         return db.query(models.Device).all()
     
     @staticmethod
-    def get_by_id(db: Session, device_id: int):
-        return db.query(models.Device).filter(models.Device.id == device_id).first()
-    
+    def get_by_device_id(db: Session, device_id: str):
+        return (
+            db.query(models.Device)
+            .filter(models.Device.device_id == device_id)
+            .first()
+        )
+
     @staticmethod
     def create(db: Session, data: schemas.DeviceCreate):
         device = models.Device(
@@ -55,5 +59,11 @@ class DeviceRepository:
     def delete(db: Session, device):
         db.delete(device)
         db.commit()
+
+    @staticmethod
+    def get_by_id(db: Session, device_id: int):
+        return db.query(models.Device).filter(
+            models.Device.id == device_id
+        ).first()
 
     

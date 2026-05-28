@@ -10,3 +10,10 @@ def get_session():
         bind=engine,
     )
    
+def get_db():
+    SessionLocal = get_session()
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

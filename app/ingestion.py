@@ -1,21 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from datetime import datetime
-
-from app.db.session import get_session
+from app.db.session import get_db
 from app.db.repositories.devices import DeviceRepository
 from app.db.repositories.logs import LogRepository
 from app.schemas import IngestRequest
 
 router = APIRouter(prefix="/ingest", tags=["ingest"])
-
-def get_db():
-    SessionLocal = get_session()
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.post("/")
 def ingest(payload: IngestRequest, db: Session = Depends(get_db)):

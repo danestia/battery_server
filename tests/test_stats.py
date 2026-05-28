@@ -60,12 +60,12 @@ def test_stats_single_device(client, db_session):
     db_session.add(log)
     db_session.commit()
 
-    response = client.get(f"/stats/device/{device.id}")
+    response = client.get(f"/stats/device/{device.device_id}")
     assert response.status_code == 200
 
     data = response.json()
 
-    assert data["device_id"] == device.id
+    assert data["device_id"] == device.device_id
     assert data["last_seen"] is not None
     assert data["time_since_last_seen_minutes"] >= 3
     assert data["last_level"] == 42

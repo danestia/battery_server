@@ -8,7 +8,7 @@ class LogRepository:
     @staticmethod
     def insert_log(
         db: Session,
-        device_id: int,
+        device_id: str,
         timestamp,
         level,
         plugged,
@@ -29,7 +29,7 @@ class LogRepository:
         db.commit()
 
     @staticmethod
-    def get_logs_for_device(db: Session, device_id: int, limit: int = 100):
+    def get_logs_for_device(db: Session, device_id: str, limit: int = 100):
         return (
             db.query(models.BatteryLog)
             .filter(models.BatteryLog.device_id == device_id)
@@ -39,7 +39,7 @@ class LogRepository:
         )
     
     @staticmethod
-    def get_logs_in_range(db: Session, device_id: int, start: datetime, end: datetime):
+    def get_logs_in_range(db: Session, device_id: str, start: datetime, end: datetime):
         return (
             db.query(models.BatteryLog)
             .filter(models.BatteryLog.device_id == device_id)
@@ -50,7 +50,7 @@ class LogRepository:
         )
     
     @staticmethod
-    def has_logs(db, device_id: int) -> bool:
+    def has_logs(db, device_id: str) -> bool:
         return (
             db.query(models.BatteryLog)
             .filter(models.BatteryLog.device_id == device_id)
@@ -59,7 +59,7 @@ class LogRepository:
         )
     
     @staticmethod
-    def get_last_log_for_device(db, device_id: int):
+    def get_last_log_for_device(db, device_id: str):
         return (
             db.query(models.BatteryLog)
             .filter(models.BatteryLog.device_id == device_id)
