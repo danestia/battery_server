@@ -23,7 +23,7 @@ def test_ingest_endpoint(client, db_session):
     
     log = db_session.execute(
         text("SELECT * FROM battery_logs WHERE device_id = :did ORDER BY timestamp DESC LIMIT 1"),
-        {"did": device.id}
+        {"did": device.device_id}
     ).fetchone()    
     assert log is not None
     assert log.level == 90

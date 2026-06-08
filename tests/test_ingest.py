@@ -23,7 +23,7 @@ def test_ingest_creates_device_and_log(client, db_session):
     device = db_session.query(Device).filter_by(device_id="test-device-123").first()
     assert device is not None
 
-    log = db_session.query(BatteryLog).filter_by(device_id=device.id).first()
+    log = db_session.query(BatteryLog).filter_by(device_id=device.device_id).first()
     assert log is not None
     assert log.level == 87
     assert log.plugged is False

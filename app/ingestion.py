@@ -13,7 +13,7 @@ def ingest(payload: IngestRequest, db: Session = Depends(get_db)):
 
     LogRepository.insert_log(
         db=db,
-        device_id=device.id,
+        device_id=device.device_id,
         timestamp=payload.timestamp,
         level=payload.level,
         plugged=payload.plugged,

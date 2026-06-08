@@ -17,7 +17,7 @@ class BatteryLog(Base):
     __tablename__ = "battery_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    device_id = Column(Integer, ForeignKey("devices.id"), index=True)
+    device_id = Column(Integer, ForeignKey("devices.device_id"), index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
     level = Column(Integer, nullable=False)
     plugged = Column(Boolean, nullable=False)
