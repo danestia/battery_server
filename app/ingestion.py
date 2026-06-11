@@ -18,7 +18,9 @@ def get_db():
 def ingest(log: schemas.BatteryLogIn, db: Session = Depends(get_db)):
     try:
         device = DeviceRepository.get_or_create(db, log.device_id)
-        LogRepository.insert_log(db, device.device_id, log)
+
+        LogRepository.insert_log(db, str(device.device_id), log)
+        
         DeviceRepository.update_last_seen(db, device)
 
         db.commit()

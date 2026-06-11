@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, AliasChoices
 from datetime import datetime
 from typing import Optional
 
@@ -10,7 +10,7 @@ class BatteryLogIn(BaseModel):
     localisation: str
     event_type: Optional[str] = None
     event_chargelevel: Optional[int] = None
-    log_uuid: Optional[str] = Field(None, validation_alias="uuid")
+    log_uuid: Optional[str] = Field(None, validation_alias=AliasChoices("uuid", "log_uuid"))
 
 class DeviceBase(BaseModel):
     device_id: str
@@ -34,6 +34,7 @@ class LogOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     device_id: int
+    log_uuid: Optional[str] = None
     timestamp: datetime
     level: int
     plugged: bool
