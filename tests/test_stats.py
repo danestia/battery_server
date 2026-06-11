@@ -17,14 +17,14 @@ def test_stats_devices_overview(client, db_session):
     db_session.commit()
 
     log_a = models.BatteryLog(
-        device_id = device_a.id,
+        device_id = device_a.device_id,
         timestamp = now,
         level = 80,
         plugged = False,
         event_type = "test",
     )
     log_b = models.BatteryLog(
-        device_id = device_b.id,
+        device_id = device_b.device_id,
         timestamp = now - timedelta(minutes=20),
         level = 60,
         plugged = True,
@@ -51,7 +51,7 @@ def test_stats_single_device(client, db_session):
     db_session.commit()
 
     log = models.BatteryLog(
-        device_id = device.id,
+        device_id = device.device_id,
         timestamp = now - timedelta(minutes=3),
         level = 42,
         plugged = False,
@@ -60,12 +60,12 @@ def test_stats_single_device(client, db_session):
     db_session.add(log)
     db_session.commit()
 
-    response = client.get(f"/stats/device/{device.id}")
+    response = client.get(f"/stats/device/{device.device_id}")
     assert response.status_code == 200
 
     data = response.json()
 
-    assert data["device_id"] == device.id
+    assert data["device_id"] == device.device_id
     assert data["last_seen"] is not None
     assert data["time_since_last_seen_minutes"] >= 3
     assert data["last_level"] == 42

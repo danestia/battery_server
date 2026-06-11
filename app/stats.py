@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from app.db.session import get_session
 from app.db.repositories.devices import DeviceRepository
 from app.db.repositories.logs import LogRepository
-from app.schemas import DeviceOut
+from app import models
 
 router = APIRouter(prefix="/stats", tags=["stats"])
 
@@ -25,7 +25,7 @@ def stats_devices(db: Session = Depends(get_db)):
     never_seen = 0
 
     for d in devices:
-        has_logs = LogRepository.has_logs(db, d.id)
+        has_logs = LogRepository.has_logs(db, d.device_id)
 
         if not has_logs:
             never_seen += 1
@@ -44,8 +44,8 @@ def stats_devices(db: Session = Depends(get_db)):
     }
 
 @router.get("/device/{device_id}")
-def stats_single_device(device_id: int, db: Session = Depends(get_db)):
-    device = DeviceRepository.get_by_id(db, device_id)
+def stats_single_device(device_id: str, db: Session = Depends(get_db)):
+    device = db.query(models.Device).filter_by(device_id=device_id).first()    
     if not device:
         raise HTTPException(404, "Device not found")
     
@@ -59,7 +59,7 @@ def stats_single_device(device_id: int, db: Session = Depends(get_db)):
         delta_minutes = (now - last_seen).total_seconds() / 60
 
     return {
-        "device_id": device.id,
+        "device_id": device.device_id,
         "last_seen": last_seen,
         "time_since_last_seen_minutes": delta_minutes,
         "last_level": last_log.level if last_log else None,

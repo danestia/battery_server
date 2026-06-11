@@ -15,7 +15,7 @@ def test_batterylog_model(db_session):
     db_session.commit()
 
     log = models.BatteryLog(
-        device_id=device.id,
+        device_id=device.device_id,
         timestamp=datetime.utcnow(),
         level=55,
         plugged=False,
@@ -28,5 +28,5 @@ def test_batterylog_model(db_session):
 
     assert log.id is not None
     assert log.level == 55
-    assert log.device_id == device.id
+    assert log.device_id == device.device_id
 
