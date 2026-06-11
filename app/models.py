@@ -18,6 +18,7 @@ class BatteryLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(Integer, ForeignKey("devices.id"), index=True)
+    log_uuid = Column(String(64), unique=True, nullable=True, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
     level = Column(Integer, nullable=False)
     plugged = Column(Boolean, nullable=False)

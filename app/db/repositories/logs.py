@@ -9,6 +9,7 @@ class LogRepository:
     def insert_log(db: Session, device_id: int, log):
         entry = models.BatteryLog(
             device_id=device_id,
+            log_uuid=log.log_uuid,
             timestamp=log.timestamp,
             level=log.level,
             plugged=log.plugged,
@@ -18,6 +19,7 @@ class LogRepository:
         )
         db.add(entry)
         db.commit()
+        db.refresh(entry)
 
     @staticmethod
     def get_logs_for_device(db: Session, device_id: int, limit: int = 100):

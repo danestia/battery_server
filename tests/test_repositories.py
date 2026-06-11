@@ -23,6 +23,7 @@ def test_update_last_seen(db_session):
 def test_insert_log(db_session):
     device = DeviceRepository.get_or_create(db_session, "repo_device_3")
     log = BatteryLogIn(
+        log_uuid="test_uuid1",
         device_id="repo_device_3",
         timestamp=datetime.utcnow(),
         level=42,

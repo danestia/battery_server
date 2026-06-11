@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from typing import Optional
 
@@ -10,6 +10,7 @@ class BatteryLogIn(BaseModel):
     localisation: str
     event_type: Optional[str] = None
     event_chargelevel: Optional[int] = None
+    log_uuid: Optional[str] = Field(None, validation_alias="uuid")
 
 class DeviceBase(BaseModel):
     device_id: str
