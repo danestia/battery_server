@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, Float, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
@@ -20,10 +20,10 @@ class BatteryLog(Base):
     device_id = Column(String(64), ForeignKey("devices.device_id"), index=True)
     log_uuid = Column(String(64), unique=True, nullable=True, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
-    level = Column(Integer, nullable=False)
+    level = Column(Float, nullable=False)
     plugged = Column(Boolean, nullable=False)
 
     localisation = Column(String(255), nullable=True)
     event_type = Column(String(32), nullable=True)
-    event_chargelevel = Column(Integer, nullable=True)
+    event_chargelevel = Column(Float, nullable=True)
     device = relationship("Device", back_populates="logs")

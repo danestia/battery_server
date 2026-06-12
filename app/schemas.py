@@ -5,11 +5,11 @@ from typing import Optional
 class BatteryLogIn(BaseModel):
     device_id: str
     timestamp: datetime
-    level: int
+    level: float
     plugged: bool
     localisation: str
     event_type: Optional[str] = None
-    event_chargelevel: Optional[int] = None
+    event_chargelevel: Optional[float] = None
     log_uuid: Optional[str] = Field(None, validation_alias=AliasChoices("uuid", "log_uuid"))
 
 class DeviceBase(BaseModel):
@@ -36,9 +36,9 @@ class LogOut(BaseModel):
     device_id: int
     log_uuid: Optional[str] = None
     timestamp: datetime
-    level: int
+    level: float
     plugged: bool
     localisation: Optional[str] = None
     event_type: Optional[str] = None
-    event_chargelevel: Optional[int] = None
+    event_chargelevel: Optional[float] = None
 
