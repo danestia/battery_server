@@ -50,4 +50,3 @@ if __name__ == "__main__":
     
     orchestrator = SolarOrchestrator(API_KEY, lat=LAT, lon=LON, tilt=TILT, azimuth=AZIMUTH)
     print("Run result:", orchestrator.run_daily_pipeline())
-#comment to recreate git action
