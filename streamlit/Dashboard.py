@@ -7,9 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# -----------------------------------------------------------------------------
-# MySQL Connection Management Core
-# -----------------------------------------------------------------------------
 def get_db_engine():
     """Initializes a pooling SQLAlchemy connection engine for MySQL."""
     user = os.getenv("DB_USER", "root")
@@ -26,7 +23,6 @@ def run_sql(query, params=None):
     """Executes a SELECT query and channels it straight to a Pandas DataFrame."""
     engine = get_db_engine()
     try:
-        # Note: Pandas read_sql accepts dictionary parameters or sequences matching %s
         df = pd.read_sql_query(query, engine, params=params)
         return df
     except Exception as e:
@@ -40,14 +36,10 @@ def execute_sql(query, params=None):
         params = ()
     try:
         with engine.begin() as conn:
-            # Wrap raw string query into an executable block
             conn.execute(text(query), params)
     except Exception as e:
         st.error(f"MySQL Execution Mutation Error: {e}")
 
-# -----------------------------------------------------------------------------
-# Data Access Objects (DAOs) adapted to MySQL
-# -----------------------------------------------------------------------------
 def get_tracker_settings():
     df = run_sql("SELECT * FROM tracker_settings LIMIT 1")
     if df.empty:
@@ -56,7 +48,6 @@ def get_tracker_settings():
     return df.iloc[0].to_dict()
 
 def save_tracker_settings(interval_minutes):
-    # MySQL uses :param syntax via text() wrapper or %s positions
     query = "UPDATE tracker_settings SET interval_minutes = :interval, updated_at = NOW() WHERE id = 1"
     execute_sql(query, {"interval": interval_minutes})
 
@@ -82,14 +73,11 @@ def save_tracker_status(is_running):
     execute_sql(query, {"status": is_running})
 
 def get_all_devices():
-    df = run_sql("SELECT DISTINCT device_name FROM battery_events WHERE device_name IS NOT NULL ORDER BY device_name")
+    df = run_sql("SELECT DISTINCT device_id FROM battery_logs WHERE device_id IS NOT NULL ORDER BY device_id")
     if df.empty:
         return []
-    return df["device_name"].tolist()
+    return df["device_id"].tolist()
 
-# -----------------------------------------------------------------------------
-# Dashboard App Pages
-# -----------------------------------------------------------------------------
 def page_event_explorer():
     st.header("🔍 Event Explorer")
 
@@ -107,21 +95,19 @@ def page_event_explorer():
     with col2:
         end_date = st.date_input("End Date", datetime.now())
 
-    # Build MySQL Query Layout dynamically
-    # Use standard relational syntax string variables
-    query = "SELECT * FROM battery_events WHERE 1=1"
+    query = "SELECT * FROM battery_logs WHERE 1=1"
     params = {}
 
     if selected_device != "All":
-        query += " AND device_name = :device_name"
-        params["device_name"] = selected_device
+        query += " AND device_id = %(device_id)s"
+        params["device_id"] = selected_device
 
     if event_filter == "Only Specific Actions":
         query += " AND event_type IS NOT NULL"
     elif event_filter == "System Boundaries ('start', 'stop')":
         query += " AND event_type IN ('start', 'stop')"
 
-    query += " AND timestamp BETWEEN :start_ts AND :end_ts ORDER BY timestamp DESC"
+    query += " AND timestamp BETWEEN %(start_ts)s AND %(end_ts)s ORDER BY timestamp DESC"
     params["start_ts"] = f"{start_date} 00:00:00"
     params["end_ts"] = f"{end_date} 23:59:59"
 
@@ -145,23 +131,21 @@ def page_device_comparison():
         dev_b = st.selectbox("Comparison Node Device B", devices, key="dev_b")
 
     if st.button("Compute Processing Metrics"):
-        # Metric Block 1: Basic Averages
         avg_df = run_sql("""
-            SELECT device_name, AVG(battery_level) as avg_level 
-            FROM battery_events 
-            WHERE device_name IN %(devs)s GROUP BY device_name
+            SELECT device_id, AVG(level) as avg_level 
+            FROM battery_logs 
+            WHERE device_id IN %(devs)s GROUP BY device_id
         """, params={"devs": [dev_a, dev_b]})
         
         st.subheader("Mean Battery Levels")
         st.dataframe(avg_df, use_container_width=True)
 
-        # Metric Block 2: MySQL Date Logic-based Daily Discharge Delta
         discharge_df = run_sql("""
-            SELECT device_name, DATE(timestamp) AS day,
-                   (MAX(battery_level) - MIN(battery_level)) AS discharge_delta
-            FROM battery_events
-            WHERE device_name IN %(devs)s
-            GROUP BY device_name, DATE(timestamp)
+            SELECT device_id, DATE(timestamp) AS day,
+                   (MAX(level) - MIN(level)) AS discharge_delta
+            FROM battery_logs
+            WHERE device_id IN %(devs)s
+            GROUP BY device_id, DATE(timestamp)
             ORDER BY day DESC
         """, params={"devs": [dev_a, dev_b]})
         
@@ -206,9 +190,6 @@ def page_tracker_control():
             save_tracker_status(1)
             st.rerun()
 
-# -----------------------------------------------------------------------------
-# Application Router Base
-# -----------------------------------------------------------------------------
 def main():
     st.set_page_config(page_title="Central Battery Server Core Dashboard", layout="wide")
     st.sidebar.title("🔋 Server Control Deck")
