@@ -2,7 +2,6 @@ import os
 import mysql.connector
 from mysql.connector import Error
 import json
-from datetime import datetime
 
 class SolarStorageManager:
     
@@ -21,7 +20,7 @@ class SolarStorageManager:
         )
 
     def initialize_storage(self):
-        query = """
+        query_raw = """
         CREATE TABLE IF NOT EXISTS pvnode_raw_forecasts (
             id INT AUTO_INCREMENT PRIMARY KEY,
             forecast_date DATE NOT NULL UNIQUE,
@@ -31,12 +30,24 @@ class SolarStorageManager:
             raw_payload JSON NOT NULL
         );
         """
+
+        query_instructions = """
+        CREATE TABLE IF NOT EXISTS pi_hourly_instructions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            target_date DATE NOT NULL,
+            hour_index INT NOT NULL,
+            charge_target_pct DECIMAL(5,2) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_date_hour (target_date, hour_index)
+        );
+        """
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            cursor.execute(query)
+            cursor.execute(query_raw)
+            cursor.execute(query_instructions)
             conn.commit()
-            print("[STORAGE] Ingestion table verified successfully.")
+            print("[STORAGE] Ingestion and instruction tables verified successfully.")
         except Error as e:
             print(f"[STORAGE ERROR] Database initialization failed: {e}")
         finally:
@@ -56,9 +67,7 @@ class SolarStorageManager:
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            
             json_str = json.dumps(payload)
-            
             cursor.execute(query, (forecast_date, lat, lon, json_str))
             conn.commit()
             print(f"[STORAGE] Safely saved raw JSON for {forecast_date} in MySQL.")
@@ -66,6 +75,28 @@ class SolarStorageManager:
             
         except Error as e:
             print(f"[STORAGE ERROR] Failed to save raw payload to MySQL: {e}")
+            return False
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
+
+    def store_hourly_instructions(self, target_date: str, hourly_map: dict) -> bool:
+        query = """
+        INSERT INTO pi_hourly_instructions (target_date, hour_index, charge_target_pct)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE charge_target_pct = VALUES(charge_target_pct);
+        """
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            data_tuples = [(target_date, hour, pct) for hour, pct in hourly_map.items()]
+            cursor.executemany(query, data_tuples)
+            conn.commit()
+            print(f"[STORAGE] Actionable hourly instructions saved for {target_date}")
+            return True
+        except Error as e:
+            print(f"[STORAGE ERROR] Failed to save hourly instructions: {e}")
             return False
         finally:
             if 'conn' in locals() and conn.is_connected():
