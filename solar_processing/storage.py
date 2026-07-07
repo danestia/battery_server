@@ -9,7 +9,7 @@ class SolarStorageManager:
         self.host = os.environ.get("MYSQL_HOST", "localhost")
         self.user = os.environ.get("MYSQL_USER", "root")
         self.password = os.environ.get("MYSQL_PASSWORD", "")
-        self.database = os.environ.get("MYSQL_DATABASE", "battery_tracker_hub")
+        self.database = os.environ.get("MYSQL_DATABASE", "battery_tracker")
 
     def _get_connection(self):
         return mysql.connector.connect(
