@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app import models
 
@@ -58,4 +58,18 @@ class LogRepository:
             .filter(models.BatteryLog.device_id == device_id)
             .order_by(models.BatteryLog.timestamp.desc())
             .first()
+        )
+    
+    @staticmethod
+    def get_hourly_charging_counts_for_date(db: Session, target_date: str) -> list:
+        return (
+            db.query(
+                models.BatteryLog.device_id,
+                func.hour(models.BatteryLog.timestamp).label("hour_index")
+                func.count(models.BatteryLog.id).label("heartbeat_count")
+            )
+            .filter(func.date(models.BatteryLog.timestamp) == target_date)
+            .filter(models.BatteryLog.plugged == True)
+            .group_by(models.BatteryLog.device_id, func.hour(models.BatteryLog.timetamp))
+            .all()
         )

@@ -123,3 +123,24 @@ class SolarStorageManager:
             if 'conn' in locals() and conn.is_connected():
                 cursor.close()
                 conn.close()
+
+    def get_hourly_instructions_for_date(self, target_date: str) -> dict:
+        query = "SELECT hour_index, charge_target_pct FROM pi_hourly_instructions WHERE TARGET_DATE = %s"
+        hourly_map ={}
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute(query, (target_date))
+            rows = cursor.fetchall()
+
+            for hour, pct in rows:
+                hourly_map[int(hour)] = float(pct)
+
+                return hourly_map
+        except Error as e:
+            print(f"[STORAGE ERROR] Failed to retrieve hourly instrucitons: {e}")
+            return {}
+        finally:
+            if 'conn' in locals() and conn.is_connected():
+                cursor.close()
+                conn.close()
