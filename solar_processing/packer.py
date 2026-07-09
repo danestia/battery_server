@@ -13,6 +13,7 @@ class PiInstructionPacker:
 
         for ts, val in hourly_series.items():
             if pd.notna(val):
-                payload[int(ts.hour)] = round(float(val), 2)
+                decimal_val = float(val) / 100.0
+                payload[int(ts.hour)] = round(max(0.0, min(1.0, decimal_val)), 3)
 
         return payload

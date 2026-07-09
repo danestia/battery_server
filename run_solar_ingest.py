@@ -48,8 +48,9 @@ def main():
         logging.info(f"DataFrame Shape: {processed_data.shape}")
         logging.info(f"Available Columns: {list(processed_data.columns)}")
         
-        print("\n--- FIRST 5 ROWS OF PROCESSED METRICS ---")
-        print(processed_data.head(5))
+        #print("\n--- FIRST 5 ROWS OF PROCESSED METRICS ---")
+        print(processed_data)
+              #.head(5))
     else:
         logging.error("Pipeline run encountered fatal execution blocks.")
         sys.exit(1)
