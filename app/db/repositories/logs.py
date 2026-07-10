@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app import models
 
 class LogRepository:
@@ -17,9 +18,20 @@ class LogRepository:
             event_type=log.event_type,
             event_chargelevel=log.event_chargelevel
         )
-        db.add(entry)
-        db.commit()
-        db.refresh(entry)
+        try:
+            db.add(entry)
+            db.commit()
+            db.refresh(entry)
+            return entry
+        except IntegrityError:
+            db.rollback()
+            print(f"[INFO] Duplicate log caught: {log.log_uuid}. Skipping insertion")
+
+            return (
+                db.query(models.BatteryLog)
+                .filter(models.BatteryLog.log_uuid ==log.log_uuid)
+                .first()
+            )
 
     @staticmethod
     def get_logs_for_device(db: Session, device_id: str, limit: int = 100):
@@ -65,11 +77,11 @@ class LogRepository:
         return (
             db.query(
                 models.BatteryLog.device_id,
-                func.hour(models.BatteryLog.timestamp).label("hour_index")
+                func.hour(models.BatteryLog.timestamp).label("hour_index"),
                 func.count(models.BatteryLog.id).label("heartbeat_count")
             )
             .filter(func.date(models.BatteryLog.timestamp) == target_date)
             .filter(models.BatteryLog.plugged == True)
-            .group_by(models.BatteryLog.device_id, func.hour(models.BatteryLog.timetamp))
+            .group_by(models.BatteryLog.device_id, func.hour(models.BatteryLog.timestamp))
             .all()
         )

@@ -12,7 +12,7 @@ def test_packer_compresses_to_hourly_averages_scaled_to_decimal():
     assert payload[0] == 0.0
 
 def test_packer_caps_outlier_spikes():
-    times = pd.to_datetime(["2026-05-07 12:00:00", "2026-05-07 13:00"])
+    times = pd.to_datetime(["2026-05-07 12:00:00", "2026-05-07 13:00:00"])
     mock_df = pd.DataFrame({"power_percentage": [115.5, -5.0]}, index=times)
 
     payload = PiInstructionPacker.to_hourly_payload(mock_df)

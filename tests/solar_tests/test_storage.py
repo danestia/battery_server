@@ -32,11 +32,13 @@ class TestSolarStorageManager(unittest.TestCase):
         self.manager.initialize_storage()
 
         mock_connect.assert_called_once()
-        mock_cursor.execute.assert_called_once()
+        assert mock_cursor.execute.call_count == 2
 
-        executed_query = mock_cursor.execute.call_args[0][0]
-        self.assertIn("CREATE TABLE IF NOT EXISTS pvnode_raw_forecasts", executed_query)
+        first_query = mock_cursor.execute.call_args_list[0][0][0]
+        second_query = mock_cursor.execute.call_args_list[1][0][0]
 
+        self.assertIn("CREATE TABLE IF NOT EXISTS pvnode_raw_forecasts", first_query)
+        self.assertIn("CREATE TABLE IF NOT EXISTS pi_hourly_instructions", second_query)
         mock_conn.commit.assert_called_once()
         mock_cursor.close.assert_called_once()
         mock_conn.close.assert_called_once()
