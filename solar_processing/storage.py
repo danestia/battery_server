@@ -90,7 +90,7 @@ class SolarStorageManager:
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            data_tuples = [(target_date, hour, pct) for hour, pct in hourly_map.items()]
+            data_tuples = [(target_date, hour, pct * 100.0) for hour, pct in hourly_map.items()]
             cursor.executemany(query, data_tuples)
             conn.commit()
             print(f"[STORAGE] Actionable hourly instructions saved for {target_date}")
@@ -130,13 +130,13 @@ class SolarStorageManager:
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            cursor.execute(query, (target_date))
+            cursor.execute(query, (target_date,))
             rows = cursor.fetchall()
 
             for hour, pct in rows:
                 hourly_map[int(hour)] = float(pct)
 
-                return hourly_map
+            return hourly_map
         except Error as e:
             print(f"[STORAGE ERROR] Failed to retrieve hourly instrucitons: {e}")
             return {}

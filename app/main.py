@@ -28,35 +28,21 @@ def get_tomorrow_instructions():
 
     storage = SolarStorageManager()
 
-    query = """
-        SELECT hour_index, charge_target_pct
-        FROM pi_hourly_instructions
-        WHERE target_date = %s
-        ORDER BY hour_index ASC;
-    """
+    raw_payload = storage.get_hourly_instructions_for_date(tomorrow_str)
 
-    conn = None
-    cursor = None
-    try:
-        conn = storage._get_connection()
-        cursor = conn.cursor()
-        cursor.execute(query, (tomorrow_str,))
-        rows = cursor.fetchall()
-
-        if not rows:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Hourly charging instructions for {tomorrow_str} have not been generated yet"
-            )
-        
-        return{int(hour): float(pct) for hour, pct in rows}
+    if not raw_payload:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Hourly charging instructions for {tomorrow_str} have not been generated yet"
+        )
     
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"[API ERROR] Database retrieval failed: {e}")
-        raise HTTPException(status_code=500, detail="Internal database server failure")
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+    scaled_payload = {}
+    for h in range(24):
+        pct_val = raw_payload.get(h, 0.0)
+        decimal_val = float(pct_val) / 100.0
+        scaled_payload[h] = round(max(0,0, min(1.0, decimal_val)), 3)
+
+    from solar_processing.packer import PiInstructionPacker
+    plantform_payload = PiInstructionPacker.slice_working_hours(scaled_payload)
+
+    return plantform_payload

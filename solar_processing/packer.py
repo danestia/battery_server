@@ -1,7 +1,6 @@
 import pandas as pd
 
 class PiInstructionPacker:
-    #packages floating-point timelines for easier reading by Raspberry Pi
     @staticmethod
     def to_hourly_payload(power_df: pd.DataFrame) -> dict:
         if power_df.empty or 'power_percentage' not in power_df.columns:
@@ -17,3 +16,10 @@ class PiInstructionPacker:
                 payload[int(ts.hour)] = round(max(0.0, min(1.0, decimal_val)), 3)
 
         return payload
+    
+    @staticmethod
+    def slice_working_hours(payload: dict) -> dict:
+        if not payload:
+            return {}
+        
+        return {h: payload.get(h, 0.0) for h in range(8, 18)}
