@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from datetime import timedelta, date
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,6 +28,7 @@ def load_env_from_root():
 load_env_from_root()
 
 from solar_processing.ingest import SolarIngestPipeline
+from solar_processing.storage import SolarStorageManager
 
 def main():
     api_key = os.environ.get("PVNODE_API_KEY")
@@ -47,12 +49,27 @@ def main():
         logging.info("--- PIPELINE VERIFICATION SUCCESSFUL ---")
         logging.info(f"DataFrame Shape: {processed_data.shape}")
         logging.info(f"Available Columns: {list(processed_data.columns)}")
-        
-        #print("\n--- FIRST 5 ROWS OF PROCESSED METRICS ---")
-        print(processed_data)
-              #.head(5))
+
+        logging.info("Aggregating 15 minute physical metrics to hourly values...")
+
+        import pandas as pd
+        if not isinstance(processed_data.index, pd.DatetimeIndex):
+            processed_data.index = pd.to_datetime(processed_data.index)
+
+        hourly_series = processed_data.groupby(processed_data.index.hour)['power_percentage'].mean() / 100.0
+
+        hourly_averages = hourly_series.clip(lower=0.0, upper=1.0).round(4).to_dict()
+        tomorrow_str = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+
+        logging.info(f"Saving hourly instructions to database for {tomorrow_str}...")
+
+        storage = SolarStorageManager()
+        storage.store_hourly_instructions(tomorrow_str, hourly_averages)
+
+        logging.info("--- DATABASE WRITES COMPLETED SUCCESSFULLY ---")
+    
     else:
-        logging.error("Pipeline run encountered fatal execution blocks.")
+        logging.error("Pipeline run encountered fatal execution blocks")
         sys.exit(1)
 
 if __name__ == "__main__":
