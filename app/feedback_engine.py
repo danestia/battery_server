@@ -1,16 +1,17 @@
-from datetime import datetime, date, UTC
-import mysql.connector
-from mysql.connector import Error
-from solar_processing.storage import SolarStorageManager
 import os
+
+from typing import List, Dict, Any
+from datetime import date
 from sqlalchemy.orm import Session
+
+from solar_processing.storage import SolarStorageManager
 from app.db.repositories.logs import LogRepository
 
 class FeedbackEngine:
     def __init__(self):
 
         self.heartbeats_per_hour = int(os.environ.get("HEARTBEATS_PER_HOUR", 60))
-        self.laptop_wattage = 60.0
+        self.laptop_wattage = float(os.environ.get("LAPTOP_WATTAGE", 60.0))
         self.solar_storage = SolarStorageManager()
 
     def get_team_hourly_alignment(self, db: Session, target_date: date, target_hour: int) -> float:
@@ -26,9 +27,9 @@ class FeedbackEngine:
         if not hour_has_activity:
             return 0.0
         
-        return round(hour_weight, 1)
+        return round(hour_weight * 100.0, 1)
 
-    def calculate_daily_individual_feedback(self, db: Session, target_date: date) -> list[dict]:
+    def calculate_daily_individual_feedback(self, db: Session, target_date: date) -> list[Dict[str, Any]]:
         date_str = target_date.strftime("%Y-%m-%d")
         solar_map = self.solar_storage.get_hourly_instructions_for_date(date_str)
 
@@ -43,7 +44,7 @@ class FeedbackEngine:
             hours_spent_charging = count / self.heartbeats_per_hour
             calculated_wh = hours_spent_charging * self.laptop_wattage
 
-            solar_ratio = solar_map.get(hour_index, 0.0) / 100.0
+            solar_ratio = solar_map.get(hour_index, 0.0)
 
             profiles[device_id]["total_wh"] += calculated_wh
             profiles[device_id]["solar_wh"] += (calculated_wh * solar_ratio)
@@ -52,7 +53,7 @@ class FeedbackEngine:
         for device_id, metrics in profiles.items():
             total = metrics["total_wh"]
             solar = metrics["solar_wh"]
-            other = total - solar
+            other = max(0.0, total - solar)
             alignment_score = (solar / total) * 100.0 if total > 0 else 0.0
 
             results.append({
