@@ -30,8 +30,6 @@ for d in devices:
         
     rows.append({
         "Device ID": d.device_id,
-        "Hostname": d.hostname,
-        "OS": d.os,
         "Last Seen": d.last_seen,
         "Status": status,
         "Last Level": last_log.level if last_log else None,
