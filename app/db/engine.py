@@ -1,8 +1,12 @@
 import os
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_FILE = BASE_DIR / ".env"
+
+load_dotenv(dotenv_path=ENV_FILE)
 
 _engine = None
 
