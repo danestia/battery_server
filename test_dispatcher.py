@@ -3,7 +3,7 @@ from solar_processing.pi_dispatcher import PlantformMQTTDispatcher
 
 def run_test():
     
-    times = pd.date_range('2026-07-21 08:00', period=22, freq='h')
+    times = pd.date_range('2026-07-21 00:00', periods=22, freq='h')
     percentages = [
         0, 0, 0, 0, 0, 0, 0, 0,
         51.4, 71.7, 88.2, 96.2, 98.4, 94.8, 85.4, 70.3, 51.0, 29.4,
@@ -11,9 +11,7 @@ def run_test():
     ]
     df = pd.DataFrame({"power_percentage": percentages}, index=times) 
 
-    #pi_ip = '172.22.111.96'
-    #pi_ip = '192.168.0.10'
-    pi_ip = '100.95.222.26'
+    pi_ip = '100.95.20.33' #melina pc tailscale ip
 
     dispatcher = PlantformMQTTDispatcher(broker_ip=pi_ip, topic="prototype/schedule")
 
