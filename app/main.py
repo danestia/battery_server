@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone,  timedelta
 from app.ingestion import router as ingestion_router
 from app.logs import router as logs_router
@@ -9,6 +10,14 @@ app = FastAPI(
     title="Battery Tracker Hub",
     description="Receives and stores battery logs from spoke machines",
     version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 app.include_router(ingestion_router)
@@ -40,7 +49,7 @@ def get_tomorrow_instructions():
     for h in range(24):
         pct_val = raw_payload.get(h, 0.0)
         decimal_val = float(pct_val) / 100.0
-        scaled_payload[h] = round(max(0,0, min(1.0, decimal_val)), 3)
+        scaled_payload[h] = round(max(0.0, min(1.0, decimal_val)), 3)
 
     from solar_processing.packer import PiInstructionPacker
     plantform_payload = PiInstructionPacker.slice_working_hours(scaled_payload)
