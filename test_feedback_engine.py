@@ -121,5 +121,5 @@ def test_daily_feedback_filters_non_working_hour_logs(mock_log_repo, feedback_en
     assert len(result["devices"]) == 1
     device_data = result["devices"][0]
 
-    assert device_data["total_energy_wh"] == 60-0
-    assert device_data["solar_energy_wh"] == 60-0
+    assert device_data["total_energy_wh"] == 60.0
+    assert device_data["solar_energy_wh"] == 60.0
