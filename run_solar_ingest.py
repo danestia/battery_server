@@ -59,7 +59,9 @@ def main():
         hourly_series = processed_data.groupby(processed_data.index.hour)['power_percentage'].mean() / 100.0
 
         hourly_averages = hourly_series.clip(lower=0.0, upper=1.0).round(4).to_dict()
-        tomorrow_str = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+        #tomorrow_str = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+        tomorrow_str = date.today()
+
 
         logging.info(f"Saving hourly instructions to database for {tomorrow_str}...")
 

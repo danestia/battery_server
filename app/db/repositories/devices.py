@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import Dict, Optional
 from app import models
 from app import schemas
 from datetime import datetime
@@ -16,6 +17,11 @@ class DeviceRepository:
         db.commit()
         db.refresh(device)
         return device
+
+    @staticmethod
+    def get_device_email_map(db: Session) -> Dict[str, str]:
+        devices = db.query(models.Device).filter(models.Device.email.isnot(None)).all()
+        return {device.device_id: device.email for device in devices if device.email}
     
     @staticmethod
     def update_last_seen(db: Session, device):

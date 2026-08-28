@@ -9,6 +9,7 @@ class Device(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(String(64), unique=True, index=True)
+    email = Column(String(255), nullable=True)
     first_seen = Column(DateTime, server_default=func.now())
     last_seen = Column(DateTime, server_default=func.now(), onupdate=func.now())
     logs = relationship("BatteryLog", back_populates="device")
