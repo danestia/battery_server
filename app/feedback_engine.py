@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import date
 from sqlalchemy.orm import Session
 
@@ -7,13 +7,27 @@ from solar_processing.storage import SolarStorageManager
 from app.db.repositories.logs import LogRepository
 
 class FeedbackEngine:
-    def __init__(self):
+
+
+    def __init__(self, solar_storage: Optional[SolarStorageManager] = None):
         self.heartbeats_per_hour = int(os.environ.get("HEARTBEATS_PER_HOUR", 60))
         self.laptop_wattage = float(os.environ.get("LAPTOP_WATTAGE", 60.0))
-        self.solar_storage = SolarStorageManager()
 
         self.working_hours = range(8, 18)
         self.working_hours_count = len(self.working_hours)  # 10
+
+        self.solar_storage = solar_storage if solar_storage is not None else SolarStorageManager()
+
+
+    @staticmethod
+    def _to_percentage(value: float) -> float:
+        return value if value > 1.0 else value * 100.0
+    
+
+    @staticmethod
+    def _to_ratio(value: float) -> float:
+        return value / 100.0 if value > 1.0 else value
+    
 
     def get_team_hourly_alignment(self, db: Session, target_date: date, target_hour: int) -> float:
         if target_hour not in self.working_hours:
@@ -21,7 +35,7 @@ class FeedbackEngine:
 
         date_str = target_date.strftime("%Y-%m-%d")
 
-        solar_map = self.solar_storage.get_hourly_instructions_for_date(date_str)
+        solar_map = self.solar_storage.get_hourly_instructions_for_date(date_str) or {}
         hour_weight = solar_map.get(target_hour, 0.0)
 
         all_counts = LogRepository.get_hourly_charging_counts_for_date(db, date_str)
@@ -29,34 +43,34 @@ class FeedbackEngine:
 
         if not hour_has_activity:
             return 0.0
-        
-        # Handle decimal vs percentage scale safely
-        pct = hour_weight if hour_weight > 1.0 else hour_weight * 100.0
-        return round(pct, 1)
+
+        return round(self._to_percentage(hour_weight), 1)
+
+
 
     def calculate_daily_individual_feedback(self, db: Session, target_date: date) -> Dict[str, Any]:
         date_str = target_date.strftime("%Y-%m-%d")
         full_solar_map = self.solar_storage.get_hourly_instructions_for_date(date_str) or {}
 
-        # Ensure all 10 hours exist in solar_map (default missing hours to 0.0)
-        solar_map = {
-            h: full_solar_map.get(h, 0.0) for h in self.working_hours
-        }
+        # Aggregate solar metrics across working hours
+        solar_pcts: List[float] = []
+        solar_ratios: List[float] = []
+        solar_map: Dict[int, float] = {}
 
-        # Convert values to percentage (0.0 - 100.0) scale
-        solar_pcts = [
-            v if v > 1.0 else v * 100.0 for v in solar_map.values()
-        ]
+        for h in self.working_hours:
+            raw_val = full_solar_map.get(h, 0.0)
+            solar_map[h] = raw_val
+            solar_pcts.append(self._to_percentage(raw_val))
+            solar_ratios.append(self._to_ratio(raw_val))
 
-        max_solar_pct = round(max(solar_pcts), 1)
-        min_solar_pct = round(min(solar_pcts), 1)
+        max_solar_pct = round(max(solar_pcts), 1) if solar_pcts else 0.0
+        min_solar_pct = round(min(solar_pcts), 1) if solar_pcts else 0.0
         avg_solar_pct = round(sum(solar_pcts) / self.working_hours_count, 1)
 
-        total_solar_ratio_sum = sum(v / 100.0 for v in solar_pcts)
-        max_possible_solar_wh = round(total_solar_ratio_sum * self.laptop_wattage, 1)
+        max_possible_solar_wh = round(sum(solar_ratios) * self.laptop_wattage, 1)
 
         raw_logs = LogRepository.get_hourly_charging_counts_for_date(db, date_str)
-        profiles = {}
+        profiles: Dict[str, Dict[str, float]] = {}
 
         for device_id, hour_index, count in raw_logs:
             if hour_index not in self.working_hours:
@@ -71,9 +85,7 @@ class FeedbackEngine:
 
             hours_spent_charging = count / self.heartbeats_per_hour
             calculated_wh = hours_spent_charging * self.laptop_wattage
-
-            raw_ratio = solar_map.get(hour_index, 0.0)
-            solar_ratio = raw_ratio / 100.0 if raw_ratio > 1.0 else raw_ratio
+            solar_ratio = self._to_ratio(solar_map.get(hour_index, 0.0))
 
             profiles[device_id]["total_wh"] += calculated_wh
             profiles[device_id]["solar_wh"] += (calculated_wh * solar_ratio)
