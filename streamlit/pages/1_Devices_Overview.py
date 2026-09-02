@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+import sys
+from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from db import get_db
 from app.db.repositories.devices import DeviceRepository
 from app.db.repositories.logs import LogRepository

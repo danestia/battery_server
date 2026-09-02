@@ -21,7 +21,7 @@ def get_logs(device_id: int, limit: int = 100, db: Session = Depends(get_db)):
     device = DeviceRepository.get_by_id(db, device_id)
     if not device:
         raise HTTPException(404, "Device not found")
-    return LogRepository.get_logs_for_device(db, device_id, limit)
+    return LogRepository.get_logs_for_device(db, device.device_id, limit)
 
 @router.get("/{device_id}/range", response_model=list[LogOut])
 def get_logs_range(
@@ -33,4 +33,4 @@ def get_logs_range(
     device = DeviceRepository.get_by_id(db, device_id)
     if not device:
         raise HTTPException(404, "Device not found")
-    return LogRepository.get_logs_in_range(db, device_id, start, end)
+    return LogRepository.get_logs_in_range(db, device.device_id, start, end)

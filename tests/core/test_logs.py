@@ -9,7 +9,7 @@ def test_get_logs_for_device(client, db_session):
     now = datetime.utcnow()
     logs = [
         models.BatteryLog(
-            device_id = device.id,
+            device_id = device.device_id,
             timestamp = now - timedelta(minutes=i),
             level = 50 + i,
             plugged = False,
@@ -39,7 +39,7 @@ def test_get_logs_in_range(client, db_session):
 
     inside = [
         models.BatteryLog(
-            device_id = device.id,
+            device_id = device.device_id,
             timestamp = now - timedelta(minutes=i),
             level = 40,
             plugged = True,
@@ -49,7 +49,7 @@ def test_get_logs_in_range(client, db_session):
     ]
 
     outside = models.BatteryLog(
-        device_id = device.id,
+        device_id = device.device_id,
         timestamp = now - timedelta(days=1),
         level = 10,
         plugged = False,
@@ -60,7 +60,7 @@ def test_get_logs_in_range(client, db_session):
     db_session.commit()
 
     start = (now - timedelta(minutes = 5)).isoformat()
-    end = now.isoformat()
+    end = (now + timedelta(seconds=1)).isoformat()
 
     response = client.get(
         f"/logs/{device.id}/range?start={start}&end={end}"

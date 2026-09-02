@@ -10,7 +10,7 @@ class EmailNotifier:
     def __init__(self):
         self.smtp_host = os.environ.get("SMTP_HOST", "localhost")
         self.smtp_port = int(os.environ.get("SMTP_PORT", 1025))
-        self.sender_email = os.environ.get("SENDER_EMAIL", "solar_study@project.local") #octopus
+        self.sender_email = os.environ.get("SENDER_EMAIL", "solar_study@project.local")
 
     def send_individual_feedback(self, recipient_email: str, feedback_entry: Dict[str, Any], date_str: str) -> bool:
         msg = EmailMessage()
@@ -33,7 +33,7 @@ class EmailNotifier:
         try:
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.send_message(msg)
-            logger.info(f"Succesffully sent feedback email to {recipient_email}")
+            logger.info(f"Successfully sent feedback email to {recipient_email}")
             return True
         except Exception as err:
             logger.error(f"Failed to send feedback email to {recipient_email}: {err}")

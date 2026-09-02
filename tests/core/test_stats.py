@@ -1,6 +1,8 @@
+import pytest
 from datetime import datetime, timedelta
 from app.db.repositories.devices import DeviceRepository
 from app import models
+
 
 def test_stats_devices_overview(client, db_session):
     now = datetime.utcnow()
@@ -67,7 +69,7 @@ def test_stats_single_device(client, db_session):
 
     assert data["device_id"] == device.device_id
     assert data["last_seen"] is not None
-    assert data["time_since_last_seen_minutes"] >= 3
+    assert data["time_since_last_seen_minutes"] == pytest.approx(3, abs=0.1)
     assert data["last_level"] == 42
     assert data["last_event_type"] == "heartbeat"
 

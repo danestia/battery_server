@@ -1,10 +1,12 @@
 import os
-import pytest
-from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
+from pathlib import Path
 
 # Use a named in-memory database shared across connections
 os.environ["DATABASE_URL"] = "sqlite:///file:testdb?mode=memory&cache=shared&uri=true"
+
+import pytest
+from sqlalchemy.orm import sessionmaker
+from fastapi.testclient import TestClient
 
 from app.db.base import Base
 from app.db.engine import get_engine
@@ -28,8 +30,10 @@ def db_session(engine):
     try:
         yield session
     finally:
-        session.expire_all()
         session.rollback()
+        for table in reversed(Base.metadata.sorted_tables):
+            session.execute(table.delete())
+        session.commit()
         session.close()
 
 @pytest.fixture(scope="function")

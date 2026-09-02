@@ -33,7 +33,7 @@ class DeviceOut(DeviceBase):
 class LogOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    device_id: int
+    device_id: str
     log_uuid: Optional[str] = None
     timestamp: datetime
     level: float

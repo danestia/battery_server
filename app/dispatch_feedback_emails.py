@@ -1,5 +1,14 @@
+import sys
 import logging
-from datetime import date
+import argparse
+
+from datetime import date, datetime
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+    
 from app.db.session import get_session
 from app.feedback_engine import FeedbackEngine
 from app.db.repositories.devices import DeviceRepository

@@ -67,8 +67,8 @@ def test_calculate_daily_individual_feedback(mock_get_instructions, mock_get_log
 
     results = feedback_engine.calculate_daily_individual_feedback(mock_db_session, target_date)
 
-    assert len(results) == 1
-    device_res = results[0]
+    assert len(results["devices"]) == 1
+    device_res = results["devices"][0]
 
     assert device_res["device_id"] == "device_A"
     assert device_res["total_energy_wh"] == 60.0
