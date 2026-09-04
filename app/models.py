@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Float, Integer, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from datetime import datetime
+
 from app.db.base import Base
 
 class Device(Base):
@@ -12,6 +12,7 @@ class Device(Base):
     email = Column(String(255), nullable=True)
     first_seen = Column(DateTime, server_default=func.now())
     last_seen = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    
     logs = relationship("BatteryLog", back_populates="device")
 
 class BatteryLog(Base):

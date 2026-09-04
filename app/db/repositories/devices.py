@@ -39,15 +39,19 @@ class DeviceRepository:
         return list(db.execute(select(models.Device)).scalars().all())
     
     @staticmethod
-    def get_by_id(db: Session, id: int) -> Optional[models.Device]:
+    def get_by_id(db: Session, id: str) -> Optional[models.Device]:
         return db.get(models.Device, id)
+
+    @staticmethod
+    def get_by_device_id(db: Session, device_id: str) -> Optional[models.Device]:
+        return db.execute(
+            select(models.Device).where(models.Device.device_id == device_id)
+        ).scalar_one_or_none()
     
     @staticmethod
     def create(db: Session, data: schemas.DeviceCreate) -> models.Device:
         device = models.Device(
             device_id=data.device_id,
-            hostname=data.hostname,
-            os=data.os,
         )
         db.add(device)
         db.flush()

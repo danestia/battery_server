@@ -12,8 +12,9 @@ def run_test():
     df = pd.DataFrame({"power_percentage": percentages}, index=times) 
 
     pi_ip = '100.95.20.33' #melina pc tailscale ip
+    #pi_ip = '100.95.222.26' #raspberrypi
 
-    dispatcher = PlantformMQTTDispatcher(broker_ip=pi_ip, topic="prototype/schedule")
+    dispatcher = PlantformMQTTDispatcher(broker_ip=pi_ip, topic="prototypes/schedule")
 
     print(f"Sending test payload to {pi_ip} on topic 'prototypes/schedule'...")
     success = dispatcher.dispatch(df)

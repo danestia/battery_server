@@ -12,7 +12,14 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 class SolarOrchestrator:
-    def __init__(self, api_key: str, lat: float, lon: float, tilt: float = 27.0, azimuth: float = 180.0):
+    def __init__(
+        self,
+        api_key: str,
+        lat: float,
+        lon: float,
+        tilt: float = 27.0,
+        azimuth: float = 180.0,
+    ):
         self.lat = lat
         self.lon = lon
         self.tilt = tilt
@@ -23,7 +30,7 @@ class SolarOrchestrator:
         self.packer = PiInstructionPacker()
         self.storage = SolarStorageManager()
 
-    def run_daily_pipeline(self) -> dict:
+    def run_daily_pipeline(self) -> dict[int, float]:
         try:
             logger.info("Initiating solar processing daily sync...")
             self.storage.initialize_storage()
@@ -31,7 +38,8 @@ class SolarOrchestrator:
             raw_json = self.client.fetch_forecast(
                 orientation=str(int(self.azimuth)), 
                 slope=str(int(self.tilt)),
-                days='1')
+                days='1',
+            )
             
             tomorrow_date = (datetime.now(UTC) + timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -41,7 +49,9 @@ class SolarOrchestrator:
             if base_df.empty:
                 raise ValueError("Parsed data frame is empty. Pipeine aborted.")
             
-            calculated_df = self.interpreter.process_solar_metrics(base_df, self.tilt, self.azimuth)
+            calculated_df = self.interpreter.process_solar_metrics(
+                base_df, self.tilt, self.azimuth
+            )
             final_payload = self.packer.to_hourly_payload(calculated_df)
 
             self.storage.store_hourly_instructions(tomorrow_date, final_payload)

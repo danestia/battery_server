@@ -1,10 +1,16 @@
+import json
+import logging
 import os
+from typing import Any, Dict, Optional
+
 import mysql.connector
 from mysql.connector import Error
-import json
+
+logger = logging.getLogger(__name__)
+
 
 class SolarStorageManager:
-    
+
     def __init__(self):
         self.host = os.environ.get("MYSQL_HOST", "localhost")
         self.user = os.environ.get("MYSQL_USER", "root")
@@ -16,10 +22,11 @@ class SolarStorageManager:
             host=self.host,
             user=self.user,
             password=self.password,
-            database=self.database
+            database=self.database,
         )
 
-    def initialize_storage(self):
+    def initialize_storage(self) -> None:
+        """Initializes raw forecast and hourly instruction storage tables in MySQL if missing."""
         query_raw = """
         CREATE TABLE IF NOT EXISTS pvnode_raw_forecasts (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,21 +48,27 @@ class SolarStorageManager:
             UNIQUE KEY uq_date_hour (target_date, hour_index)
         );
         """
+        conn = None
+        cursor = None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
             cursor.execute(query_raw)
             cursor.execute(query_instructions)
             conn.commit()
-            print("[STORAGE] Ingestion and instruction tables verified successfully.")
+            logger.info("Ingestion and instruction tables verified successfully.")
         except Error as e:
-            print(f"[STORAGE ERROR] Database initialization failed: {e}")
+            logger.error(f"Database initialization failed: {e}")
         finally:
-            if 'conn' in locals() and conn.is_connected():
+            if cursor:
                 cursor.close()
+            if conn and conn.is_connected():
                 conn.close()
 
-    def store_raw_forecast(self, forecast_date: str, lat: float, lon: float, payload: dict) -> bool:
+    def store_raw_forecast(
+        self, forecast_date: str, lat: float, lon: float, payload: dict
+    ) -> bool:
+        """Stores or updates the raw solar forecast JSON payload for a target date."""
         query = """
         INSERT INTO pvnode_raw_forecasts (forecast_date, latitude, longitude, raw_payload)
         VALUES (%s, %s, %s, %s)
@@ -64,69 +77,87 @@ class SolarStorageManager:
             longitude = VALUES(longitude),
             raw_payload = VALUES(raw_payload);
         """
+        conn = None
+        cursor = None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
             json_str = json.dumps(payload)
             cursor.execute(query, (forecast_date, lat, lon, json_str))
             conn.commit()
-            print(f"[STORAGE] Safely saved raw JSON for {forecast_date} in MySQL.")
+            logger.info(f"Safely saved raw JSON for {forecast_date} in MySQL.")
             return True
-            
         except Error as e:
-            print(f"[STORAGE ERROR] Failed to save raw payload to MySQL: {e}")
+            logger.error(f"Failed to save raw payload to MySQL: {e}")
             return False
         finally:
-            if 'conn' in locals() and conn.is_connected():
+            if cursor:
                 cursor.close()
+            if conn and conn.is_connected():
                 conn.close()
 
-    def store_hourly_instructions(self, target_date: str, hourly_map: dict) -> bool:
+    def store_hourly_instructions(
+        self, target_date: str, hourly_map: Dict[int, float]
+    ) -> bool:
+        """Stores or updates normalized hourly charge targets (0.0..1.0) into percentage values (0..100%)."""
         query = """
         INSERT INTO pi_hourly_instructions (target_date, hour_index, charge_target_pct)
         VALUES (%s, %s, %s)
         ON DUPLICATE KEY UPDATE charge_target_pct = VALUES(charge_target_pct);
         """
+        conn = None
+        cursor = None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            data_tuples = [(target_date, hour, pct * 100.0) for hour, pct in hourly_map.items()]
+            data_tuples = [
+                (target_date, hour, round(pct * 100.0, 2))
+                for hour, pct in hourly_map.items()
+            ]
             cursor.executemany(query, data_tuples)
             conn.commit()
-            print(f"[STORAGE] Actionable hourly instructions saved for {target_date}")
+            logger.info(
+                f"Actionable hourly instructions saved for date: {target_date}"
+            )
             return True
         except Error as e:
-            print(f"[STORAGE ERROR] Failed to save hourly instructions: {e}")
+            logger.error(f"Failed to save hourly instructions: {e}")
             return False
         finally:
-            if 'conn' in locals() and conn.is_connected():
+            if cursor:
                 cursor.close()
+            if conn and conn.is_connected():
                 conn.close()
 
-    def retrieve_raw_forecast(self, forecast_date: str) -> dict:
-        
+    def retrieve_raw_forecast(self, forecast_date: str) -> Optional[Dict[str, Any]]:
+        """Retrieves raw forecast JSON for a specific date."""
         query = "SELECT raw_payload FROM pvnode_raw_forecasts WHERE forecast_date = %s"
+        conn = None
+        cursor = None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
             cursor.execute(query, (forecast_date,))
             row = cursor.fetchone()
-            
-            if row:
-                return json.loads(row[0])
+
+            if row and row[0]:
+                return json.loads(row[0]) if isinstance(row[0], str) else row[0]
             return None
-            
         except Error as e:
-            print(f"[STORAGE ERROR] Failed to retrieve payload: {e}")
+            logger.error(f"Failed to retrieve raw payload: {e}")
             return None
         finally:
-            if 'conn' in locals() and conn.is_connected():
+            if cursor:
                 cursor.close()
+            if conn and conn.is_connected():
                 conn.close()
 
-    def get_hourly_instructions_for_date(self, target_date: str) -> dict:
-        query = "SELECT hour_index, charge_target_pct FROM pi_hourly_instructions WHERE TARGET_DATE = %s"
-        hourly_map ={}
+    def get_hourly_instructions_for_date(self, target_date: str) -> Dict[int, float]:
+        """Retrieves stored hourly instructions for a date as {hour_index: percentage}."""
+        query = "SELECT hour_index, charge_target_pct FROM pi_hourly_instructions WHERE target_date = %s"
+        hourly_map = {}
+        conn = None
+        cursor = None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -138,9 +169,10 @@ class SolarStorageManager:
 
             return hourly_map
         except Error as e:
-            print(f"[STORAGE ERROR] Failed to retrieve hourly instrucitons: {e}")
+            logger.error(f"Failed to retrieve hourly instructions: {e}")
             return {}
         finally:
-            if 'conn' in locals() and conn.is_connected():
+            if cursor:
                 cursor.close()
+            if conn and conn.is_connected():
                 conn.close()

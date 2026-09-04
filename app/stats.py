@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
-from app.db.session import get_session
+from app.db.session import get_session as get_db
 from app.db.repositories.devices import DeviceRepository
 from app.db.repositories.logs import LogRepository
 from app import models
@@ -10,9 +10,6 @@ from app import models
 router = APIRouter(prefix="/stats", tags=["stats"])
 
 ONLINE_THRESHOLD_MINUTES = 5
-
-from app.db.session import get_session as get_db
-
 
 @router.get("/devices")
 def stats_devices(db: Session = Depends(get_db)):
@@ -45,9 +42,9 @@ def stats_devices(db: Session = Depends(get_db)):
 
 @router.get("/device/{device_id}")
 def stats_single_device(device_id: str, db: Session = Depends(get_db)):
-    device = db.query(models.Device).filter_by(device_id=device_id).first()    
+    device = DeviceRepository.get_by_device_id(db, device_id)   
     if not device:
-        raise HTTPException(404, "Device not found")
+        raise HTTPException(status_code=404, detail="Device not found")
     
     last_log = LogRepository.get_last_log_for_device(db, device_id)
 
