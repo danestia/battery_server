@@ -95,9 +95,7 @@ class FeedbackEngine:
                 normalized_score = 50.0
 
             feedback_text = (
-                f"On {date_str}, your behavioral adherence score was {round(normalized_score, 1)}%. "
-                f"You earned {round(positive_points, 2)} positive reward points for green charging choices "
-                f"and were penalized {round(negative_points, 2)} points for off-peak charging or missed peak windows."
+                f"Date: {date_str}, Score: {round(normalized_score, 1)}%. "
             )
 
             device_results.append(
