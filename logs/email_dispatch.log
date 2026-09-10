@@ -29,3 +29,63 @@ Traceback (most recent call last):
     db.query(
     ^^^^^^^^
 AttributeError: 'generator' object has no attribute 'query'
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/dan/Documents/code/github_project/battery_server/app/dispatch_feedback_emails.py", line 55, in <module>
+    run_daily_email_dispatch()
+  File "/home/dan/Documents/code/github_project/battery_server/app/dispatch_feedback_emails.py", line 29, in run_daily_email_dispatch
+    feedback_payload = engine.calculate_daily_individual_feedback(db, target_date)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dan/Documents/code/github_project/battery_server/app/feedback_engine.py", line 72, in calculate_daily_individual_feedback
+    raw_logs = LogRepository.get_hourly_charging_counts_for_date(db, date_str)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dan/Documents/code/github_project/battery_server/app/db/repositories/logs.py", line 78, in get_hourly_charging_counts_for_date
+    db.query(
+    ^^^^^^^^
+AttributeError: 'generator' object has no attribute 'query'
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/dan/Documents/code/github_project/battery_server/app/dispatch_feedback_emails.py", line 55, in <module>
+    run_daily_email_dispatch()
+  File "/home/dan/Documents/code/github_project/battery_server/app/dispatch_feedback_emails.py", line 29, in run_daily_email_dispatch
+    feedback_payload = engine.calculate_daily_individual_feedback(db, target_date)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dan/Documents/code/github_project/battery_server/app/feedback_engine.py", line 72, in calculate_daily_individual_feedback
+    raw_logs = LogRepository.get_hourly_charging_counts_for_date(db, date_str)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dan/Documents/code/github_project/battery_server/app/db/repositories/logs.py", line 78, in get_hourly_charging_counts_for_date
+    db.query(
+    ^^^^^^^^
+AttributeError: 'generator' object has no attribute 'query'
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/dan/Documents/code/github_project/battery_server/app/dispatch_feedback_emails.py", line 55, in <module>
+    run_daily_email_dispatch()
+  File "/home/dan/Documents/code/github_project/battery_server/app/dispatch_feedback_emails.py", line 29, in run_daily_email_dispatch
+    feedback_payload = engine.calculate_daily_individual_feedback(db, target_date)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dan/Documents/code/github_project/battery_server/app/feedback_engine.py", line 72, in calculate_daily_individual_feedback
+    raw_logs = LogRepository.get_hourly_charging_counts_for_date(db, date_str)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dan/Documents/code/github_project/battery_server/app/db/repositories/logs.py", line 78, in get_hourly_charging_counts_for_date
+    db.query(
+    ^^^^^^^^
+AttributeError: 'generator' object has no attribute 'query'
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/dan/Documents/code/github_project/battery_server/app/dispatch_feedback_emails.py", line 55, in <module>
+    run_daily_email_dispatch()
+  File "/home/dan/Documents/code/github_project/battery_server/app/dispatch_feedback_emails.py", line 29, in run_daily_email_dispatch
+    feedback_payload = engine.calculate_daily_individual_feedback(db, target_date)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dan/Documents/code/github_project/battery_server/app/feedback_engine.py", line 72, in calculate_daily_individual_feedback
+    raw_logs = LogRepository.get_hourly_charging_counts_for_date(db, date_str)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dan/Documents/code/github_project/battery_server/app/db/repositories/logs.py", line 78, in get_hourly_charging_counts_for_date
+    db.query(
+    ^^^^^^^^
+AttributeError: 'generator' object has no attribute 'query'
