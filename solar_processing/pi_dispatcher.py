@@ -25,7 +25,8 @@ class PlantformMQTTDispatcher:
             full_day_payload = PiInstructionPacker.to_hourly_payload(power_df)
             working_payload = PiInstructionPacker.slice_working_hours(full_day_payload)
 
-            json_payload = json.dumps(working_payload)
+            json_dict = PiInstructionPacker.to_json_instruction(working_payload)
+            json_payload = json.dumps(json_dict)
 
             try:
                 client = mqtt.Client(

@@ -31,3 +31,27 @@ class PiInstructionPacker:
             return {h: 0.0 for h in range(8, 18)}
         
         return {h: payload.get(h, 0.0) for h in range(8, 18)}
+
+    @staticmethod
+    def to_protocol_string(
+        working_payload: dict[int, float], command: str = "play"
+    ) -> str:
+        formatted_values = [
+            f"{working_payload.get(h, 0.0):.3f}" for h in range(8,18)
+        ]
+        values_str = "|".join(formatted_values)
+        return f"<plantform|update|{values_str}|{command}>"
+
+    @staticmethod
+    def to_json_instruction(
+        working_payload: dict[int, float], command: str = "play"
+    ) -> dict:
+        protocol_cmd = PiInstructionPacker.to_protocol_string(
+            working_payload, command
+        )
+        return {
+            "target": "plantform",
+            "action": "update",
+            "command_string": protocol_cmd,
+            "hours_schedule": working_payload,
+        }
