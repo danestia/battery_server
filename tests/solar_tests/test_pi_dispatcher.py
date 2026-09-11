@@ -43,8 +43,14 @@ def test_dispatch_success(mock_mqtt_client_cls, sample_power_df):
     assert kwargs.get("retain") is True
 
     payload_dict = json.loads(published_payload_str)
-    assert set(payload_dict.keys()) == {str(h) for h in range(8, 18)}
-    assert payload_dict["12"] == 0.95
+
+    assert payload_dict["device"] == "plantform"
+    assert payload_dict["action"] == "update"
+    assert payload_dict["command"] == "play"
+
+    schedule = payload_dict["schedule"]
+    assert set(schedule.keys()) == {str(h) for h in range(8, 18)}
+    assert schedule["12"] == 0.95
     assert mock_client.disconnect.called
 
 @patch("paho.mqtt.client.Client")

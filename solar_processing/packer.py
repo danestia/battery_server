@@ -44,14 +44,15 @@ class PiInstructionPacker:
 
     @staticmethod
     def to_json_instruction(
-        working_payload: dict[int, float], command: str = "play"
+        working_payload: dict[int, float], action: str = "update", command: str = "play"
     ) -> dict:
-        protocol_cmd = PiInstructionPacker.to_protocol_string(
-            working_payload, command
-        )
+        schedule = {
+            str(h): round(val, 3)
+            for h, val in working_payload.items()
+        }
         return {
-            "target": "plantform",
-            "action": "update",
-            "command_string": protocol_cmd,
-            "hours_schedule": working_payload,
+            "device": "plantform",
+            "action": action,
+            "command": command,
+            "schedule": schedule,
         }

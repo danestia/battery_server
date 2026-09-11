@@ -56,15 +56,15 @@ def test_to_protocol_string_padding_missing_hours():
 def test_to_json_instruction_structure(sample_working_payload):
     json_dict = PiInstructionPacker.to_json_instruction(sample_working_payload)
 
-    assert json_dict["target"] == "plantform"
+    assert json_dict["device"] == "plantform"
     assert json_dict["action"] == "update"
-    assert json_dict["hours_schedule"] == sample_working_payload
-    assert (
-        json_dict["command_string"]
-        == "<plantform|update|0.000|0.000|0.052|0.065|0.113|0.266|0.296|0.855|1.000|0.954|play>"
-    )
+    assert json_dict["command"] == "play"
 
-def test_integraation_full_packing_pipeline():
+    expected_schedule = {str(k): v for k, v in sample_working_payload.items()}
+    assert json_dict["schedule"] == expected_schedule
+    
+
+def test_integration_full_packing_pipeline():
     times = pd.date_range("2026-05-07 00:00", periods=24, freq="1h")
     powers = [0.0] * 8 + [10.0, 30.0, 50.0, 70.0, 90.0, 100.0, 80.0, 60.0, 40.0, 20.0] + [0.0] * 6
     df = pd.DataFrame({"power_percentage": powers}, index=times)
@@ -74,6 +74,7 @@ def test_integraation_full_packing_pipeline():
     json_dict = PiInstructionPacker.to_json_instruction(working_hours)
 
     assert len(working_hours) == 10
-    assert "command_string" in json_dict
-    assert json_dict["command_string"].startswith("<plantform|update|")
-    assert json_dict["command_string"].endswith("|play>")
+    assert json_dict["device"] == "plantform"
+    assert json_dict["action"] == "update"
+    assert json_dict["command"] == "play"
+    assert json_dict["schedule"]["12"] == 0.900
