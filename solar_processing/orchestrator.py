@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from solar_processing.client import PVNodeClient
 from solar_processing.interpreter import SolarDataInterpreter
-from solar_processing.packer import PiInstructionPacker
+from solar_processing.packer_plant import PiInstructionPacker
 from solar_processing.storage import SolarStorageManager
 
 load_dotenv()

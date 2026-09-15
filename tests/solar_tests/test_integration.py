@@ -3,7 +3,7 @@ import json
 import pytest
 import pandas as pd
 from solar_processing.interpreter import SolarDataInterpreter
-from solar_processing.packer import PiInstructionPacker
+from solar_processing.packer_plant import PiInstructionPacker
 
 def test_production_pipeline_with_real_json():
     fixture_path = os.path.join(

@@ -3,7 +3,8 @@ import json
 import logging
 import pandas as pd
 
-from solar_processing.packer import PiInstructionPacker
+from solar_processing.packer_plant import PiInstructionPacker
+from solar_processing.packer_energy import EnergyInstructionPacker
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +20,9 @@ class PlantformMQTTDispatcher:
         self.broker = broker_ip
         self.port = port
         self.topic = topic
-    
-    def dispatch(self, power_df: pd.DataFrame) -> bool:
-        try:
-            full_day_payload = PiInstructionPacker.to_hourly_payload(power_df)
-            working_payload = PiInstructionPacker.slice_working_hours(full_day_payload)
 
-            json_dict = PiInstructionPacker.to_json_instruction(working_payload)
+    def _publish(self, json_dict: dict) -> bool:
+        try:
             json_payload = json.dumps(json_dict)
 
             try:
@@ -36,9 +33,7 @@ class PlantformMQTTDispatcher:
                 client = mqtt.Client()
 
             client.connect(self.broker, self.port, keepalive=60)
-
             result = client.publish(self.topic, json_payload, retain=True)
-
             result.wait_for_publish(timeout=10)
             client.disconnect()
 
@@ -52,3 +47,15 @@ class PlantformMQTTDispatcher:
         except Exception as e:
             logger.error(f"MQTT Dispatch Exception: {e}")
             return False
+
+    def dispatch_schedule(self, power_df: pd.DataFrame) -> bool:
+        full_day_payload = PiInstructionPacker.to_hourly_payload(power_df)
+        working_payload = PiInstructionPacker.slice_working_hours(full_day_payload)
+
+        json_dict = PiInstructionPacker.to_json_instruction(working_payload)
+        return self._publish(json_dict)
+
+    def dispatch_gain(self, gain_value: int | str) -> bool:
+        json_dict = EnergyInstructionPacker.to_json_instruction(gain_value)
+        return self._publish(json_dict)
+        

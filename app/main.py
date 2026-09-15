@@ -6,7 +6,7 @@ from app.ingestion import router as ingestion_router
 from app.logs import router as logs_router
 from app.stats import router as stats_router
 from solar_processing.storage import SolarStorageManager
-from solar_processing.packer import PiInstructionPacker
+from solar_processing.packer_plant import PiInstructionPacker
 
 app = FastAPI(
     title="Battery Tracker Hub",

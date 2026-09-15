@@ -26,33 +26,30 @@ class PiInstructionPacker:
         return payload
     
     @staticmethod
-    def slice_working_hours(payload: dict[int, float]) -> dict[int, float]:
+    def slice_working_hours(payload: dict[int, float]) -> list[float]:
         if not payload:
-            return {h: 0.0 for h in range(8, 18)}
+            return [0.0 for _ in range(8, 18)]
         
-        return {h: payload.get(h, 0.0) for h in range(8, 18)}
+        return [round(payload.get(h, 0.0), 3) for h in range (8, 18)]
 
     @staticmethod
     def to_protocol_string(
-        working_payload: dict[int, float], command: str = "play"
+        working_payload: list[float], command: str = "play"
     ) -> str:
         formatted_values = [
-            f"{working_payload.get(h, 0.0):.3f}" for h in range(8,18)
+            f"{val:.3f}" for val in working_payload
         ]
         values_str = "|".join(formatted_values)
         return f"<plantform|update|{values_str}|{command}>"
 
     @staticmethod
     def to_json_instruction(
-        working_payload: dict[int, float], action: str = "update", command: str = "play"
+        working_payload: list[float], action: str = "update", command: str = "play"
     ) -> dict:
-        schedule = {
-            str(h): round(val, 3)
-            for h, val in working_payload.items()
-        }
+        schedule = [f"{float(val):.3f}" for val in working_payload]        
         return {
-            "device": "plantform",
-            "action": action,
-            "command": command,
-            "schedule": schedule,
+            "type": "action",
+            "device": "plantform1",
+            "command": f"{action}-{command}",
+            "params": schedule,
         }

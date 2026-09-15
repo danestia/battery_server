@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from dotenv import load_dotenv
 
 from solar_processing.ingest import SolarIngestPipeline
-from solar_processing.packer import PiInstructionPacker
+from solar_processing.packer_plant import PiInstructionPacker
 from solar_processing.storage import SolarStorageManager
 
 logging.basicConfig(

@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from solar_processing.packer import PiInstructionPacker
+from solar_processing.packer_plant import PiInstructionPacker
 
 def test_packer_compresses_to_hourly_averages_scaled_to_decimal():
     times = pd.to_datetime(["2026-05-07 08:00:00", "2026-05-07 08:30:00", "2026-05-07 09:00:00"])
