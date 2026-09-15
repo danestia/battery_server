@@ -1,6 +1,16 @@
 import pandas as pd
 import argparse
+import logging
 from solar_processing.pi_dispatcher import PlantformMQTTDispatcher
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S"
+)
+
+
+
 
 def run_test(target: str, broker_ip: str):
     dispatcher = PlantformMQTTDispatcher(broker_ip=broker_ip, topic="prototypes")
@@ -21,6 +31,22 @@ def run_test(target: str, broker_ip: str):
         gain_value = "5"
         success = dispatcher.dispatch_gain(gain_value)
 
+    elif target == "activate":
+        print("Starting activation protocol...")
+        success = dispatcher.run_activation_protocol()
+
+    elif target == "display":
+        print("Starting display protocol ( Power-on -> Dispatch schedule -> Power-off)")
+        times = pd.date_range('2026-07-21 00:00', periods=24, freq='h')
+        percentages = [
+            0, 0, 0, 0, 0, 0, 0, 0,
+            51.4, 71.7, 88.2, 96.2, 98.4, 94.8, 85.4, 70.3, 51.0, 29.5,
+            0, 0, 0, 0, 0, 0
+        ]
+        df = pd.DataFrame({"power_percentage": percentages}, index=times)
+        success = dispatcher.run_display_protocol(df)
+
+
     else:
         print(f"Unknown target: {target}")
         return
@@ -34,7 +60,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Dispatch MQTT test instructions")
     parser.add_argument(
         "--target",
-        choices=["plantform", "energyshape"],
+        choices=["plantform", "energyshape", "activate", "display"],
         default="plantform",
         help="Specify which device cammand profile to test"
     )
