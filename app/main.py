@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone,  timedelta
+from typing import List
 
 from app.ingestion import router as ingestion_router
 from app.logs import router as logs_router
@@ -33,12 +34,8 @@ def health():
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
-@app.get(
-        "/api/v1/instructions/tomorrow",
-        response_model=dict[int, float],
-        tags=["instructions"]
-    )
-def get_tomorrow_instructions():
+@app.get("/api/v1/instructions/tomorrow", response_model=List[float])
+async def get_tomorrow_instructions():
     tomorrow_str = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
 
     storage = SolarStorageManager()
@@ -51,12 +48,12 @@ def get_tomorrow_instructions():
             detail=f"Hourly charging instructions for {tomorrow_str} have not been generated yet"
         )
     
-    scaled_payload = {}
+    """scaled_payload = {}
     for h in range(24):
         pct_val = raw_payload.get(h, 0.0)
         decimal_val = float(pct_val) / 100.0
-        scaled_payload[h] = round(max(0.0, min(1.0, decimal_val)), 3)
+        scaled_payload[h] = round(max(0.0, min(1.0, decimal_val)), 3)"""
 
-    plantform_payload = PiInstructionPacker.slice_working_hours(scaled_payload)
+    plantform_payload = PiInstructionPacker.db_map_to_working_payload(raw_payload)
 
     return plantform_payload

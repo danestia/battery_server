@@ -28,7 +28,7 @@ def test_dispatch_success(mock_mqtt_client_cls, sample_power_df):
         broker_ip="127.0.0.1", port=1883, topic="prototypes/schedule"
     )
 
-    success = dispatcher.dispatch(sample_power_df)
+    success = dispatcher.dispatch_schedule(sample_power_df)
 
     assert success is True
     mock_client.connect.assert_called_once_with("127.0.0.1", 1883, keepalive=60)
@@ -44,13 +44,11 @@ def test_dispatch_success(mock_mqtt_client_cls, sample_power_df):
 
     payload_dict = json.loads(published_payload_str)
 
-    assert payload_dict["device"] == "plantform"
-    assert payload_dict["action"] == "update"
-    assert payload_dict["command"] == "play"
+    assert payload_dict["device"] == "plantform1"
+    assert payload_dict["command"] == "update-play"
 
-    schedule = payload_dict["schedule"]
-    assert set(schedule.keys()) == {str(h) for h in range(8, 18)}
-    assert schedule["12"] == 0.95
+    schedule = payload_dict["params"]
+    assert schedule[4] == "0.950"
     assert mock_client.disconnect.called
 
 @patch("paho.mqtt.client.Client")
@@ -61,6 +59,6 @@ def test_dispatch_mqtt_error_handling(mock_mqtt_client_cls, sample_power_df):
     mock_client.connect.side_effect = Exception("Connection Refused")
 
     dispatcher = PlantformMQTTDispatcher(broker_ip="192.168.1.99")
-    success = dispatcher.dispatch(sample_power_df)
+    success = dispatcher.dispatch_schedule(sample_power_df)
 
     assert success is False

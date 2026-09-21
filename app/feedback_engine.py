@@ -118,3 +118,20 @@ class FeedbackEngine:
             "max_possible_day_points": round(max_possible_points, 2),
             "devices": device_results,
         }
+
+
+    def calculate_daily_team_feedback(self, db: Session, target_date: date) -> str:
+        
+        individual_results = self.calculate_daily_individual_feedback(db, target_date)
+        devices = individual_results["devices"]
+
+        if not devices:
+            return "0" 
+
+        active_count = len(devices)
+        team_score_pct = sum(d["score_pct"] for d in devices) / active_count
+
+        scaled = (team_score_pct - 50.0) / 5.0
+        clamped_val = max(-10, min(10, int(round(scaled))))
+
+        return str(clamped_val)

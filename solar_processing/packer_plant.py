@@ -53,3 +53,11 @@ class PiInstructionPacker:
             "command": f"{action}-{command}",
             "params": schedule,
         }
+
+    @staticmethod
+    def db_map_to_working_payload(db_map: dict[int, float]) -> list[float]:
+        working_hours = range(8, 18)
+        return [
+            round(max(0.0, min(1.0, db_map.get(h, 0.0) / 100.0)), 3)
+            for h in working_hours
+        ]

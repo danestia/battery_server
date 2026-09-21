@@ -4,6 +4,9 @@ import logging
 import pandas as pd
 import time
 
+from datetime import date
+from sqlalchemy.orm import Session
+
 from solar_processing.packer_plant import PiInstructionPacker
 from solar_processing.packer_energy import EnergyInstructionPacker
 from solar_processing.packer_system import SystemInstructionPacker
@@ -114,6 +117,37 @@ class PlantformMQTTDispatcher:
 
         json_dict = PiInstructionPacker.to_json_instruction(working_payload)
         return self._publish(json_dict)
+
+    def dispatch_schedule_from_db(self, db: Session, target_date: date) -> bool:
+        date_str = target_date.strftime("%Y-%m-%d")
+        logger.info(f"Fetching pi_hourly_instructions for {date_str} from database...")
+
+        query = """
+            SELECT hour_index, charge_target_pct AS power_percentage 
+            FROM battery_tracker.pi_hourly_instructions 
+            WHERE target_date = %s 
+            ORDER BY hour_index ASC
+        """
+
+        df_raw = pd.read_sql(query, db.bind, params=(date_str,))
+
+        if df_raw.empty:
+            logger.warning(f"No instructions found for {date_str}")
+            return False
+
+        times = pd.date_range(f"{date_str} 00:00", periods=24, freq='h')
+
+        full_hours_df = pd.DataFrame({"hour_index": range(24)}).merge(
+            df_raw, on="hour_index", how='left'
+        ).fillna(0.0)
+
+        power_df = pd.DataFrame(
+            {"power_percentage": full_hours_df["power_percentage"].values},
+            index=times
+        )
+
+        logger.info(f"Successfully loaded {len(df_raw)} hours from database. Dispatching..")
+        return self.dispatch_schedule(power_df)
 
     def dispatch_gain(self, gain_value: int | str) -> bool:
         json_dict = EnergyInstructionPacker.to_json_instruction(gain_value)

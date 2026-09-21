@@ -1,7 +1,17 @@
 import pandas as pd
 import argparse
 import logging
+import os
+
+from datetime import date
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+
 from solar_processing.pi_dispatcher import PlantformMQTTDispatcher
+from solar_processing.storage import SolarStorageManager
+
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -10,14 +20,14 @@ logging.basicConfig(
 )
 
 
-
-
 def run_test(target: str, broker_ip: str):
     dispatcher = PlantformMQTTDispatcher(broker_ip=broker_ip, topic="prototypes")
 
     print(f"Sending test payload for {target} to {broker_ip} on topic 'prototypes'...")
 
-    if target == "plantform":    
+    if target == "plantform":   
+        # sample data for test
+        """ 
         times = pd.date_range('2026-07-21 00:00', periods=24, freq='h')
         percentages = [
             0, 0, 0, 0, 0, 0, 0, 0,
@@ -26,6 +36,25 @@ def run_test(target: str, broker_ip: str):
         ]
         df = pd.DataFrame({"power_percentage": percentages}, index=times)
         success = dispatcher.dispatch_schedule(df)
+        """
+
+        #fetching real data for demo
+
+        db_user = os.environ.get("MYSQL_USER", "root")
+        db_pass = os.environ.get("MYSQL_PASSWORD", "")
+        db_host = os.environ.get("MYSQL_HOST", "localhost")
+        db_name = os.environ.get("MYSQL_DATABASE", "battery_tracker")
+
+        engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_pass}@{db_host}/{db_name}")
+        SessionLocal = sessionmaker(bind=engine)
+
+        db = SessionLocal()
+        try:
+            target_date = date.today()
+            print(f"Fetching database schedule for target date: {target_date}")
+            success = dispatcher.dispatch_schedule_from_db(db, target_date)
+        finally:
+            db.close()
 
     elif target == "energyshape":
         gain_value = "5"
@@ -66,7 +95,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--ip",
-        default="127.0.0.1",
+        default="100.95.20.33", #melina
+        #default="127.0.0.1",
         help="MQTT broker IP address"
     )
     args = parser.parse_args()

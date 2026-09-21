@@ -26,42 +26,34 @@ def test_packer_handles_empty_dataframe():
 
 @pytest.fixture
 def sample_working_payload():
-    return {
-        8: 0.000,
-        9: 0.000,
-        10: 0.052,
-        11: 0.065,
-        12: 0.113,
-        13: 0.266,
-        14: 0.296,
-        15: 0.855,
-        16: 1.000,
-        17: 0.954,
-    }
+    return [0.0, 0.0, 0.052, 0.065, 0.113, 0.266, 0.296, 0.855, 1.000, 0.954]
 
 def test_to_protocol_string_formatting(sample_working_payload):
     protocol_str = PiInstructionPacker.to_protocol_string(
         sample_working_payload, command="play"
     )
-    expected = "<plantform|update|0.000|0.000|0.052|0.065|0.113|0.266|0.296|0.855|1.000|0.954|play>"
+    expected = "<plantform|update|0.000|0.000|0.052|0.065|0.113|0.266|0.296|0.855|1.000|0.954|play>"    
     assert protocol_str == expected
 
 def test_to_protocol_string_padding_missing_hours():
-    partial_payload = {10: 0.500, 15: 1.000}
-    protocol_str = PiInstructionPacker.to_protocol_string(partial_payload)
-
+    partial_map = {h: 0.0 for h in range(8, 18)}
+    partial_map[10] = 0.500
+    partial_map[15] = 1.000
+    
+    # Extract values in working-hour order
+    working_payload = [partial_map[h] for h in range(8, 18)]
+    protocol_str = PiInstructionPacker.to_protocol_string(working_payload)
+    
     expected = "<plantform|update|0.000|0.000|0.500|0.000|0.000|0.000|0.000|1.000|0.000|0.000|play>"
     assert protocol_str == expected
-
+    
 def test_to_json_instruction_structure(sample_working_payload):
     json_dict = PiInstructionPacker.to_json_instruction(sample_working_payload)
 
-    assert json_dict["device"] == "plantform"
-    assert json_dict["action"] == "update"
-    assert json_dict["command"] == "play"
-
-    expected_schedule = {str(k): v for k, v in sample_working_payload.items()}
-    assert json_dict["schedule"] == expected_schedule
+    assert json_dict["device"] == "plantform1"
+    assert json_dict["type"] == "action"
+    assert json_dict["command"] == "update-play"
+    assert len(json_dict["params"]) == 10
     
 
 def test_integration_full_packing_pipeline():
@@ -74,7 +66,6 @@ def test_integration_full_packing_pipeline():
     json_dict = PiInstructionPacker.to_json_instruction(working_hours)
 
     assert len(working_hours) == 10
-    assert json_dict["device"] == "plantform"
-    assert json_dict["action"] == "update"
-    assert json_dict["command"] == "play"
-    assert json_dict["schedule"]["12"] == 0.900
+    assert json_dict["device"] == "plantform1"
+    assert json_dict["type"] == "action"
+    assert json_dict["command"] == "update-play"
