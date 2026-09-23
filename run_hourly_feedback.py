@@ -1,3 +1,11 @@
+"""
+Run Hourly Feedback Module
+--------------------------
+Production entry point executed hourly via cron to compute the current 
+day's team performance score using FeedbackEngine and dispatch it 
+to the energyshape MQTT endpoint.
+"""
+
 import os
 import logging
 from datetime import date
@@ -15,9 +23,15 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%H:%M:%S"
 )
+logger = logging.getLogger(__name__)
 
 def run_hourly_feedback():
-    broker_ip = os.environ.get("MQTT_BROKER_IP", "100.95.20.33")
+    broker_ip = os.environ.get("MQTT_BROKER_IP")
+    if not broker_ip:
+        raise ValueError(
+            "MQTT_BROKER_IP environment variable is not set. " \
+            "Please configure in .env"
+        )
     topic = os.environ.get("MQTT_TOPIC", "prototypes")
     
     db_user = os.environ.get("MYSQL_USER", "root")

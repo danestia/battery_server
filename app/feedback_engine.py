@@ -135,3 +135,7 @@ class FeedbackEngine:
         clamped_val = max(-10, min(10, int(round(scaled))))
 
         return str(clamped_val)
+
+    """Gain estimation approximated from renewable energy availability,
+      configuration conformity, and cumulation over time, based on the
+      approach provided by Guillaume RIVIERE on September 8, 2026."""

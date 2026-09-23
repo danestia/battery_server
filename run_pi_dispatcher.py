@@ -1,3 +1,11 @@
+"""
+Run Pi Dispatcher Module
+------------------------
+Production entry point executed daily via cron at 08:00 to fetch 
+the day's solar charging schedule from the MySQL database and dispatch 
+it to the configured MQTT broker.
+"""
+
 import os
 import logging
 from datetime import date
@@ -15,8 +23,13 @@ logging.basicConfig(
     datefmt="%H:%M:%S"
 )
 
-def main():
-    broker_ip = os.environ.get("MQTT_BROKER_IP", "100.95.20.33")
+def main() -> None:
+    broker_ip = os.environ.get("MQTT_BROKER_IP")
+    if not broker_ip:
+        raise ValueError(
+            "MQTT_BROKER_IP environment variable is not set. "
+            "Please configure in .env file"
+        )
     topic = os.environ.get("MQTT_TOPIC", "prototypes")
 
     db_user = os.environ.get("MYSQL_USER", "root")
