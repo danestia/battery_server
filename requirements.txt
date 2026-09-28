@@ -1,7 +1,9 @@
+aiosmtpd==1.4.6
 altair==6.1.0
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
+atpublic==7.0.0
 attrs==26.1.0
 blinker==1.9.0
 cachetools==7.1.2
@@ -24,9 +26,11 @@ Jinja2==3.1.6
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
 MarkupSafe==3.0.3
+mysql-connector-python==9.7.0
 narwhals==2.21.2
 numpy==2.4.5
 packaging==26.2
+paho-mqtt==2.1.0
 pandas==3.0.3
 pillow==12.2.0
 pluggy==1.6.0

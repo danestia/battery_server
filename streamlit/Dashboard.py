@@ -89,6 +89,11 @@ def page_event_explorer():
         ["All", "Only Specific Actions", "System Boundaries ('start', 'stop')"],
     )
 
+    plugged_filter = st.selectbox(
+        "Plugged Status",
+        ["All", "Plugged (1)", "Unplugged (0)"]
+    )
+
     col1, col2 = st.columns(2)
     with col1:
         start_date = st.date_input("Start Date", datetime.now() - timedelta(days=7))
@@ -106,6 +111,11 @@ def page_event_explorer():
         query += " AND event_type IS NOT NULL"
     elif event_filter == "System Boundaries ('start', 'stop')":
         query += " AND event_type IN ('start', 'stop')"
+
+    if plugged_filter == "Plugged (1)":
+        query += " AND plugged = 1"
+    elif plugged_filter == "Unplugged (0)":
+        query += " AND plugged = 0"
 
     query += " AND timestamp BETWEEN %(start_ts)s AND %(end_ts)s ORDER BY timestamp DESC"
     params["start_ts"] = f"{start_date} 00:00:00"
