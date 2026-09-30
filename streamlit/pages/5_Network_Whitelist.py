@@ -37,7 +37,29 @@ st.subheader("Update Whitelist Settings")
 new_network_input = st.text_input("Enter network to add to whitelist (eg estia.local)")
 
 if st.button("Add to Whitelist"):
-    if new_network_input.strip():
-        st.success(f"Network '{new_network_input.strip()}' staged for configuration storage")
+    network_name = new_network_input.strip()
+    if network_name:
+        engine = get_db_engine()
+        try:
+            with engine.begin() as conn:
+                # Assuming you want to update a column or insert into a whitelist table.
+                # For a comma-separated list in network_settings:
+                res = conn.execute(text("SELECT server_url FROM network_settings WHERE id = 1")).fetchone()
+                current_urls = res[0] if res and res[0] else ""
+                
+                # Append if not already in the list
+                url_list = [u.strip() for u in current_urls.split(",") if u.strip()]
+                if network_name not in url_list:
+                    url_list.append(network_name)
+                    updated_urls = ",".join(url_list)
+                    conn.execute(
+                        text("UPDATE network_settings SET server_url = :urls, updated_at = NOW() WHERE id = 1"),
+                        {"urls": updated_urls}
+                    )
+                    st.success(f"Network '{network_name}' successfully added to the whitelist!")
+                else:
+                    st.warning(f"Network '{network_name}' is already in the whitelist.")
+        except Exception as e:
+            st.error(f"Failed to update whitelist in database: {e}")
     else:
         st.error("Please enter a valid network identifier.")

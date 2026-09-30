@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Date, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -14,6 +14,7 @@ class Device(Base):
     last_seen = Column(DateTime, server_default=func.now(), onupdate=func.now())
     
     logs = relationship("BatteryLog", back_populates="device")
+    performance_scores = relationship("PerformanceScore", back_populates="device")
 
 class BatteryLog(Base):
     __tablename__ = "battery_logs"
@@ -29,3 +30,15 @@ class BatteryLog(Base):
     event_type = Column(String(32), nullable=True)
     event_chargelevel = Column(Float, nullable=True)
     device = relationship("Device", back_populates="logs")
+
+class PerformanceScore(Base):
+    __tablename__ = "performance_scores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    device_id = Column(String(64), ForeignKey("devices.device_id"), index=True)
+    office_id = Column(String(64), index=True, nullable=False) # -> office1, office2, etc
+    date = Column(Date, nullable=False, index=True)
+    individual_score = Column(Float, nullable=False)
+    team_score = Column(Float, nullable=False)
+
+    device = relationship("Device", back_populates="performance_scores")

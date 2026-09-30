@@ -27,7 +27,7 @@ def run_sql(query, params=None):
         return pd.DataFrame()
 
 devices_df = run_sql("SELECT DISTINCT device_id FROM battery_logs WHERE device_id IS NOT NULL ORDER BY device_id")
-devices = devices_df["device_id"].to_list() if not devices_df.empty() else []
+devices = devices_df["device_id"].to_list() if not devices_df.empty else []
 
 if not devices:
     st.warning("No devices found in the database")
