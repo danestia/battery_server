@@ -1,33 +1,23 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent)) # points to root battery_server directory
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine
-import os
-from dotenv import load_dotenv
+from sqlalchemy import text
 
-load_dotenv()
+from db import get_db
+from app.db.repositories.devices import DeviceRepository
+from app.db.repositories.logs import LogRepository
 
 st.title("Precision Analytics")
 st.write("Calculate exact operational durations")
 
-def get_db_engine():
-    user = os.getenv("DB_USER", "root")
-    password = os.getenv("DB_PASSWORD", "")
-    host = os.getenv("DB_HOST", "127.0.0.1")
-    port = os.getenv("DB_PORT", "3306")
-    database = os.getenv("DB_NAME", "battery_tracker")
-    return create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}", pool_recycle=3600)
+db = next(get_db())
 
-def run_sql(query, params=None):
-    engine = get_db_engine()
-    try:
-        return pd.read_sql_query(query, engine, params=params)
-    except Exception as e:
-        st.error(f"Database Error: {e}")
-        return pd.DataFrame()
-
-devices_df = run_sql("SELECT DISTINCT device_id FROM battery_logs WHERE device_id IS NOT NULL ORDER BY device_id")
-devices = devices_df["device_id"].to_list() if not devices_df.empty else []
+all_devices = DeviceRepository.get_all(db)
+devices = [d.device_id for d in all_devices] if all_devices else []
 
 if not devices:
     st.warning("No devices found in the database")
@@ -49,12 +39,12 @@ with hour_col2:
     end_hour = st.slider("End Hour (0-23)", 0, 23, 18)
 
 if st.button("Compute Precision Metrics", type="primary"):
-    query = """
+    query = text("""
         SELECT timestamp, plugged, level 
         FROM battery_logs 
-        WHERE device_id = %(device_id)s 
-          AND timestamp BETWEEN %(start_ts)s AND %(end_ts)s
-    """
+        WHERE device_id = :device_id 
+          AND timestamp BETWEEN :start_ts AND :end_ts
+    """)
 
     params = {
         "device_id": selected_device,
@@ -62,7 +52,12 @@ if st.button("Compute Precision Metrics", type="primary"):
         "end_ts": f"{end_date} 23:59:59"
     }
 
-    df = run_sql(query, params)
+    try:
+        df = pd.read_sql(query, db.bind, params=params)
+    except Exception as e:
+        st.error(f"Database Error: {e}")
+        df = pd.DataFrame()
+
     if df.empty:
         st.info("No logs matching selected criteria")
     else:
