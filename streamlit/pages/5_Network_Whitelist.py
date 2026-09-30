@@ -24,6 +24,52 @@ def run_sql(query, params=None):
     except Exception as e:
         return pd.DataFrame()
 
+def get_current_whitelist():
+    engine = get_db_engine()
+    try:
+        with engine.connect() as conn:
+            res = conn.execute(text("SELECT server_url FROM network_settings WHERE id = 1")).fetchone()
+            if res and res[0]:
+                return [u.strip() for u in res[0].split(",") if u.strip()]
+    except Exception:
+        pass
+    return []
+
+# --- 1. View Current Whitelist & Removal Section ---
+st.subheader("Current Whitelist Settings")
+current_whitelist = get_current_whitelist()
+
+if current_whitelist:
+    st.write("Permitted networks currently active:")
+    for net in current_whitelist:
+        st.markdown(f"- `{net}`")
+    
+    # Removal interface
+    st.markdown("---")
+    st.subheader("Remove from Whitelist")
+    network_to_remove = st.selectbox("Select a network to remove", options=current_whitelist)
+    
+    if st.button("Remove Selected Network"):
+        if network_to_remove:
+            current_whitelist.remove(network_to_remove)
+            updated_urls = ",".join(current_whitelist)
+            engine = get_db_engine()
+            try:
+                with engine.begin() as conn:
+                    conn.execute(
+                        text("UPDATE network_settings SET server_url = :urls, updated_at = NOW() WHERE id = 1"),
+                        {"urls": updated_urls}
+                    )
+                st.success(f"Network '{network_to_remove}' successfully removed from the whitelist!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Failed to update whitelist in database: {e}")
+else:
+    st.info("The whitelist is currently empty.")
+
+st.markdown("---")
+
+# --- 2. Discovered Networks Section ---
 nets_df = run_sql("SELECT DISTINCT localisation FROM battery_logs WHERE localisation IS NOT NULL ORDER BY localisation")
 known_networks = nets_df["localisation"].tolist() if not nets_df.empty else []
 
@@ -33,7 +79,8 @@ if known_networks:
 else:
     st.info("No network locations recorded in battery logs yet")
 
-st.subheader("Update Whitelist Settings")
+# --- 3. Add to Whitelist Section ---
+st.subheader("Add Whitelist Settings")
 new_network_input = st.text_input("Enter network to add to whitelist (eg estia.local)")
 
 if st.button("Add to Whitelist"):
@@ -42,12 +89,9 @@ if st.button("Add to Whitelist"):
         engine = get_db_engine()
         try:
             with engine.begin() as conn:
-                # Assuming you want to update a column or insert into a whitelist table.
-                # For a comma-separated list in network_settings:
                 res = conn.execute(text("SELECT server_url FROM network_settings WHERE id = 1")).fetchone()
                 current_urls = res[0] if res and res[0] else ""
                 
-                # Append if not already in the list
                 url_list = [u.strip() for u in current_urls.split(",") if u.strip()]
                 if network_name not in url_list:
                     url_list.append(network_name)
@@ -57,6 +101,7 @@ if st.button("Add to Whitelist"):
                         {"urls": updated_urls}
                     )
                     st.success(f"Network '{network_name}' successfully added to the whitelist!")
+                    st.rerun()
                 else:
                     st.warning(f"Network '{network_name}' is already in the whitelist.")
         except Exception as e:

@@ -202,23 +202,6 @@ def page_tracker_control():
 
 def main():
     st.set_page_config(page_title="Central Battery Server Core Dashboard", layout="wide")
-    st.sidebar.title("🔋 Server Control Deck")
-    
-    page = st.sidebar.radio(
-        "Navigation Matrix",
-        ["Event Explorer", "Device Comparison", "Network Profiles", "Tracker Intervals", "Global Loop Killswitch"]
-    )
-
-    if page == "Event Explorer":
-        page_event_explorer()
-    elif page == "Device Comparison":
-        page_device_comparison()
-    elif page == "Network Profiles":
-        page_network_settings()
-    elif page == "Tracker Intervals":
-        page_tracker_settings()
-    elif page == "Global Loop Killswitch":
-        page_tracker_control()
 
 if __name__ == "__main__":
     main()
